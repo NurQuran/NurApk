@@ -14,7 +14,7 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
-    private static final String HOME_URL = "https://nur.youbianas1.workers.dev/";
+    private static final String HOME_URL = "file:///android_asset/index.html";
     private static final String APP_HOST = "nur.youbianas1.workers.dev";
     private static final String OFFLINE_URL = "file:///android_asset/offline.html";
     private WebView webView;
@@ -38,6 +38,7 @@ public class MainActivity extends Activity {
         settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setAllowFileAccess(true);
+        settings.setAllowFileAccessFromFileURLs(true);
         settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
 
@@ -71,7 +72,7 @@ public class MainActivity extends Activity {
         if (showingOfflineFallback) return;
         showingOfflineFallback = true;
         Toast.makeText(this, "Mode hors ligne", Toast.LENGTH_SHORT).show();
-        webView.loadUrl(OFFLINE_URL);
+        webView.loadUrl(HOME_URL);
     }
 
     @Override
