@@ -1,4 +1,4 @@
-name: Build Nūr APK
+name: Build Nur APK
 
 on:
   workflow_dispatch:
@@ -12,8 +12,8 @@ jobs:
       - name: Get source
         uses: actions/checkout@v4
 
-      - name: Restore Gradle project files
-        run: unzip -o nur-apk-source.zip build.gradle settings.gradle gradle.properties
+      - name: Restore Android project files
+        run: unzip -o nur-apk-source.zip build.gradle settings.gradle gradle.properties app/proguard-rules.pro app/src/main/AndroidManifest.xml 'app/src/main/res/*'
 
       - name: Set up Java
         uses: actions/setup-java@v4
