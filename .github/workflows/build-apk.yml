@@ -15,6 +15,9 @@ jobs:
       - name: Restore Android project files
         run: unzip -o nur-apk-source.zip build.gradle settings.gradle gradle.properties app/proguard-rules.pro app/src/main/AndroidManifest.xml 'app/src/main/res/*'
 
+      - name: Keep the lightweight web app package
+        run: rm -rf app/src/main/assets/data app/src/main/assets/index.html
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
