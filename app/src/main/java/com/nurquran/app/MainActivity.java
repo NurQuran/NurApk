@@ -14,11 +14,9 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
-    private static final String HOME_URL = "file:///android_asset/index.html";
+    private static final String HOME_URL = "https://nur.youbianas1.workers.dev/";
     private static final String APP_HOST = "nur.youbianas1.workers.dev";
-    private static final String OFFLINE_URL = "file:///android_asset/offline.html";
     private WebView webView;
-    private boolean showingOfflineFallback = false;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -34,11 +32,8 @@ public class MainActivity extends Activity {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
-        settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
         settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setAllowFileAccess(true);
-        settings.setAllowFileAccessFromFileURLs(true);
+        settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
 
@@ -47,32 +42,21 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
-                if ("file".equals(uri.getScheme()) || APP_HOST.equals(uri.getHost())) return false;
+                if (APP_HOST.equals(uri.getHost())) return false;
                 startActivity(new Intent(Intent.ACTION_VIEW, uri));
                 return true;
             }
 
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
-                if (request.isForMainFrame()) showOfflineFallback();
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                if (url.startsWith("https://")) showingOfflineFallback = false;
+                if (request.isForMainFrame()) {
+                    Toast.makeText(MainActivity.this, "Connexion indisponible. Réessayez dans un instant.", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
         if (savedInstanceState == null) webView.loadUrl(HOME_URL);
         else webView.restoreState(savedInstanceState);
-    }
-
-    private void showOfflineFallback() {
-        if (showingOfflineFallback) return;
-        showingOfflineFallback = true;
-        Toast.makeText(this, "Mode hors ligne", Toast.LENGTH_SHORT).show();
-        webView.loadUrl(HOME_URL);
     }
 
     @Override
