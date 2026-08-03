@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07110e">
+  <title>Nūr — Hors ligne</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;padding:28px;background:radial-gradient(circle at 50% 20%,#18342b 0,#0b1915 34%,#050a08 75%);color:#f4efe3;font-family:system-ui,-apple-system,sans-serif;overflow:hidden}.glow{position:fixed;width:220px;height:220px;border-radius:50%;background:#d9b96e18;filter:blur(35px);animation:float 5s ease-in-out infinite}.card{position:relative;width:min(100%,480px);padding:34px 26px;border:1px solid #d9b96e55;border-radius:34px;background:#0b1714e8;box-shadow:0 30px 100px #000b;text-align:center;animation:enter .7s cubic-bezier(.16,1,.3,1)}.mark{display:grid;place-items:center;width:74px;height:74px;margin:0 auto 22px;border-radius:24px;background:linear-gradient(145deg,#efd58e,#b78c3d);color:#102019;font:44px Georgia,serif;box-shadow:0 14px 45px #d9b96e33}small{color:#d9b96e;letter-spacing:.18em;text-transform:uppercase}h1{margin:12px 0;font:42px Georgia,serif}p{margin:0 auto 24px;color:#a7b4ae;line-height:1.65;max-width:340px}.status{display:flex;align-items:center;gap:10px;padding:14px 16px;margin-bottom:12px;border-radius:18px;background:#ffffff08;text-align:left;font-size:13px}.dot{width:10px;height:10px;border-radius:50%;background:#d9b96e;box-shadow:0 0 0 6px #d9b96e16}button{width:100%;min-height:56px;border:0;border-radius:18px;background:#d9b96e;color:#102019;font-weight:800;font-size:15px;cursor:pointer}button:active{transform:scale(.98)}footer{margin-top:20px;color:#718078;font-size:11px}@keyframes enter{from{opacity:0;transform:translateY(28px) scale(.95);filter:blur(8px)}}@keyframes float{50%{transform:translateY(-25px) scale(1.12)}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+  <main class="card">
+    <div class="mark">ن</div><small>Mode hors ligne</small><h1>Nūr</h1>
+    <p>L’application peut maintenant démarrer sans Wi‑Fi. Les contenus conservés depuis les paramètres restent accessibles dans leur copie téléchargée.</p>
+    <div class="status"><span class="dot"></span><span>Aucune connexion Internet détectée</span></div>
+    <button onclick="location.href='https://nur.youbianas1.workers.dev/read'">Réessayer / ouvrir mes téléchargements</button>
+    <footer>Les nouveaux contenus et les audios non téléchargés nécessitent une connexion.</footer>
+  </main>
+</body>
+</html>
