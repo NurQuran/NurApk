@@ -14,7 +14,7 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
-    private static final String HOME_URL = "https://nur.youbianas1.workers.dev/";
+    private static final String HOME_URL = "file:///android_asset/index.html";
     private static final String APP_HOST = "nur.youbianas1.workers.dev";
     private WebView webView;
 
@@ -32,25 +32,28 @@ public class MainActivity extends Activity {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
+        settings.setDatabaseEnabled(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setAllowFileAccess(false);
+        settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
-                if (APP_HOST.equals(uri.getHost())) return false;
+                if ("file".equals(uri.getScheme()) || APP_HOST.equals(uri.getHost())) return false;
                 startActivity(new Intent(Intent.ACTION_VIEW, uri));
                 return true;
             }
 
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
-                if (request.isForMainFrame()) {
-                    Toast.makeText(MainActivity.this, "Connexion indisponible. Réessayez dans un instant.", Toast.LENGTH_LONG).show();
+                if (request.isForMainFrame() && !"file".equals(request.getUrl().getScheme())) {
+                    Toast.makeText(MainActivity.this, "Cette fonction nécessite une connexion. La lecture hors ligne reste disponible.", Toast.LENGTH_LONG).show();
+                    view.loadUrl(HOME_URL);
                 }
             }
         });

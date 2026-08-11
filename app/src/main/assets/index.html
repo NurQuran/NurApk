@@ -1,10 +1,112 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Nūr</title><style>
-:root{--bg:#07110e;--surface:#0d1c17;--card:#11231d;--line:#ffffff18;--gold:#d9b96e;--text:#f4efe3;--muted:#9aa9a2}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 50% -10%,#18382e 0,var(--bg) 35%);color:var(--text);font-family:system-ui,-apple-system,sans-serif}.screen{min-height:100svh;padding:22px 16px 118px}.top{display:flex;align-items:center;justify-content:space-between;max-width:920px;margin:auto}.brand{font:28px Georgia,serif;color:var(--gold)}button,input,select{font:inherit}.icon,.back{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:16px;min-width:48px;min-height:48px}.hero{max-width:720px;margin:60px auto 30px;text-align:center;animation:rise .7s cubic-bezier(.16,1,.3,1)}.hero small{color:var(--gold);letter-spacing:.18em}.hero h1{font:clamp(42px,11vw,74px) Georgia,serif;margin:12px}.hero p{color:var(--muted);line-height:1.7}.search{display:flex;gap:10px;max-width:720px;margin:0 auto 18px}.search input{width:100%;padding:16px 18px;border:1px solid var(--line);border-radius:20px;background:var(--surface);color:var(--text);outline:none}.list{display:grid;gap:10px;max-width:720px;margin:auto}.surah{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:12px;width:100%;padding:16px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,var(--card),var(--surface));color:var(--text);text-align:left;animation:rise .45s both}.surah b{color:var(--gold);font:14px Georgia}.surah strong{font:20px Georgia}.surah span{font:21px serif}.reader{max-width:860px;margin:26px auto}.chapter{text-align:center;padding:25px 10px}.chapter h1{font:42px Georgia;margin:7px}.chapter .arabic-title{font:32px serif;color:var(--gold)}.basmala{text-align:center;font:32px serif;margin:15px 0 30px}.ayah{position:relative;margin:13px 0;padding:23px 18px;border:1px solid var(--line);border-radius:28px;background:color-mix(in srgb,var(--card) 90%,transparent);animation:rise .5s both}.num{display:flex;justify-content:space-between;color:var(--gold);font-size:12px}.num button{border:0;background:transparent;color:var(--gold);font-size:22px}.arabic{font:clamp(29px,7vw,42px)/2 serif;text-align:right;direction:rtl;margin:20px 0}.pron{color:#d6c99f;font-style:italic;line-height:1.7}.translation{padding-top:12px;border-top:1px solid var(--line);color:#c7d0cc;line-height:1.65}.translation.en{display:none}.dock{position:fixed;z-index:20;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);width:calc(100% - 24px);max-width:560px;display:grid;grid-template-columns:repeat(3,1fr) 54px;gap:6px;padding:7px;border:1px solid #d9b96e44;border-radius:28px;background:#0a1713f2;box-shadow:0 20px 60px #000b;backdrop-filter:blur(18px)}.dock button{min-height:54px;border:0;border-radius:21px;background:transparent;color:var(--muted)}.dock button.active{background:var(--gold);color:#102019;font-weight:800}.panel{position:fixed;z-index:50;inset:0;display:none;place-items:end center;padding:16px;background:#0008;backdrop-filter:blur(12px)}.panel.open{display:grid}.sheet{width:min(100%,620px);max-height:88svh;overflow:auto;padding:24px;border:1px solid var(--line);border-radius:32px;background:var(--surface);animation:sheet .4s cubic-bezier(.16,1,.3,1)}.sheet h2{font:32px Georgia;margin-top:0}.setting{padding:16px 0;border-bottom:1px solid var(--line)}.setting label{display:flex;justify-content:space-between;gap:12px}.setting select,.setting button{width:100%;margin-top:10px;padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--text)}.close{float:right}.notice{position:fixed;z-index:60;top:18px;left:50%;transform:translateX(-50%);padding:11px 17px;border-radius:999px;background:var(--gold);color:#102019;font-size:12px;font-weight:800;box-shadow:0 12px 40px #0008}.hidden{display:none!important}.empty{text-align:center;color:var(--muted);padding:70px 15px}.player{position:fixed;z-index:19;left:50%;bottom:92px;transform:translateX(-50%);width:calc(100% - 24px);max-width:560px;display:none;align-items:center;gap:12px;padding:12px 15px;border:1px solid var(--line);border-radius:24px;background:#10211ceb}.player.show{display:flex}.player button{width:44px;height:44px;border:0;border-radius:50%;background:var(--gold);color:#102019}.player div{flex:1}.player small{display:block;color:var(--muted)}@keyframes rise{from{opacity:0;transform:translateY(18px);filter:blur(5px)}}@keyframes sheet{from{transform:translateY(40px);opacity:0}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}
-</style></head><body><div id="notice" class="notice hidden"></div><main id="app" class="screen"><div class="top"><span class="brand">NŪR</span><button class="icon" onclick="openSettings()">⚙</button></div><section id="home"><div class="hero"><small>LE CORAN, PARTOUT</small><h1>Lire. Écouter.<br>Se recentrer.</h1><p>Les 114 sourates sont intégrées dans l’application et restent disponibles sans connexion.</p></div><div class="search"><input id="search" placeholder="Rechercher une sourate…" oninput="renderList()"></div><div id="list" class="list"></div></section><section id="read" class="hidden"><button class="back" onclick="showHome()">← Sourates</button><div id="reader" class="reader"></div></section><section id="favorites" class="hidden"><div class="hero"><small>VOTRE BIBLIOTHÈQUE</small><h1>Favoris</h1></div><div id="favlist" class="list"></div></section></main><div id="player" class="player"><button id="playPause">▶</button><div><small id="playStatus">Lecture</small><strong id="playTitle">—</strong></div><audio id="audio"></audio></div><nav class="dock"><button id="navHome" class="active" onclick="showHome()">Accueil</button><button id="navRead" onclick="openSurah(current||1)">Lire</button><button id="navFav" onclick="showFavorites()">Favoris</button><button onclick="openSettings()">⚙</button></nav><div id="settings" class="panel" onclick="if(event.target===this)closeSettings()"><div class="sheet"><button class="icon close" onclick="closeSettings()">×</button><h2>Personnalisation</h2><div class="setting"><label>Langue des menus<select id="lang" onchange="saveSettings()"><option value="fr">Français</option><option value="en">English</option><option value="ar">العربية</option></select></label></div><div class="setting"><label>Traduction<select id="translation" onchange="saveSettings();renderReader()"><option value="fr">Français — Hamidullah</option><option value="en">English — Asad</option><option value="both">Français + English</option></select></label></div><div class="setting"><label>Prononciation <input id="showPron" type="checkbox" checked onchange="saveSettings();renderReader()"></label></div><div class="setting"><label>Taille arabe <input id="fontSize" type="range" min="28" max="58" value="40" onchange="saveSettings();renderReader()"></label></div><div class="setting"><strong>Audios facultatifs</strong><p style="color:var(--muted)">Les textes sont déjà hors ligne. Les récitations utilisent Internet lors de la première écoute, puis Android peut les conserver dans son cache.</p><button onclick="prepareAudio()">Préparer l’audio de cette sourate</button></div><div class="setting"><button onclick="location.href='https://nur.youbianas1.workers.dev/'">Synchroniser avec le site</button></div></div></div><script>
-let corpora={},current=Number(localStorage.nurCurrent)||1,favs=JSON.parse(localStorage.nurFavs||'[]'),settings=JSON.parse(localStorage.nurLocalSettings||'{"translation":"fr","showPron":true,"fontSize":40,"lang":"fr"}');const $=id=>document.getElementById(id);const norm=s=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-'’]/g,' ').toLowerCase();
-async function boot(){try{const [ar,fr,en,pr]=await Promise.all(['ar','fr','en','pronunciation'].map(x=>fetch(`data/${x}.json`).then(r=>r.json())));corpora={ar:ar.data.surahs,fr:fr.data.surahs,en:en.data.surahs,pr:pr.data.surahs};renderList();applySettings();if(!navigator.onLine)toast('Mode hors ligne — textes disponibles')}catch(e){$('home').innerHTML='<div class="empty">Impossible de charger les données locales.</div>'}};
-function names(){return corpora.ar||[]}function renderList(target='list',only=f=>true){const q=norm($('search')?.value||'');$(target).innerHTML=names().filter(s=>only(s)&&(!q||norm(s.englishName+' '+s.name+' '+s.number).includes(q))).map((s,i)=>`<button class="surah" style="animation-delay:${Math.min(i,12)*.025}s" onclick="openSurah(${s.number})"><b>${String(s.number).padStart(3,'0')}</b><strong>${s.englishName}</strong><span dir="rtl">${s.name}</span></button>`).join('')||'<div class="empty">Aucune sourate trouvée</div>'}
-function openSurah(n){current=n;localStorage.nurCurrent=n;show('read');renderReader();scrollTo(0,0)}function renderReader(){if(!corpora.ar||!current)return;const ar=corpora.ar[current-1],fr=corpora.fr[current-1],en=corpora.en[current-1],pr=corpora.pr[current-1];const start=current===1?1:0;const verses=ar.ayahs.slice(start);$('reader').innerHTML=`<div class="chapter"><small>SOURATE ${String(current).padStart(2,'0')}</small><h1>${ar.englishName}</h1><div class="arabic-title" dir="rtl">${ar.name}</div><button class="icon" onclick="toggleFav()">${favs.includes(current)?'♥':'♡'}</button></div>${current!==9?'<div class="basmala" dir="rtl">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>':''}${verses.map((v,i)=>{const j=i+start;return `<article class="ayah" id="a${i+1}"><div class="num"><span>${current}:${i+1}</span><button onclick="playAyah(${i},'${audioUrl(v.number)}')">▶</button></div><p class="arabic" style="font-size:${settings.fontSize}px">${stripBasmala(v.text)}</p>${settings.showPron?`<p class="pron">${pr.ayahs[j]?.text||''}</p>`:''}${settings.translation!=='en'?`<p class="translation">${fr.ayahs[j]?.text||''}</p>`:''}${settings.translation!=='fr'?`<p class="translation en" style="display:block">${en.ayahs[j]?.text||''}</p>`:''}</article>`}).join('')}<div class="basmala">صَدَقَ ٱللَّهُ ٱلْعَظِيمُ</div>`}
-function stripBasmala(t){if(current===1)return t;return t.replace(/^بِسْمِ\s+ٱللَّهِ\s+ٱلرَّحْمَٰنِ\s+ٱلرَّحِيمِ\s*/,'')}function audioUrl(global){return `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${global}.mp3`}function playAyah(i,url){const a=$('audio');a.src=url;a.play().then(()=>{$('player').classList.add('show');$('playTitle').textContent=`${corpora.ar[current-1].englishName} · ${i+1}`;$('playPause').textContent='Ⅱ'}).catch(()=>toast('Audio non téléchargé — connexion requise'))}$('playPause').onclick=()=>{const a=$('audio');if(a.paused){a.play();$('playPause').textContent='Ⅱ'}else{a.pause();$('playPause').textContent='▶'}};$('audio').onended=()=>$('playPause').textContent='▶';
-function toggleFav(){favs=favs.includes(current)?favs.filter(x=>x!==current):[...favs,current];localStorage.nurFavs=JSON.stringify(favs);renderReader()}function show(x){['home','read','favorites'].forEach(id=>$(id).classList.toggle('hidden',id!==x));['navHome','navRead','navFav'].forEach(id=>$(id).classList.remove('active'));$({home:'navHome',read:'navRead',favorites:'navFav'}[x]).classList.add('active')}function showHome(){show('home');renderList()}function showFavorites(){show('favorites');renderList('favlist',s=>favs.includes(s.number))}function openSettings(){$('settings').classList.add('open')}function closeSettings(){$('settings').classList.remove('open')}function applySettings(){['translation','lang'].forEach(k=>$(k).value=settings[k]);$('showPron').checked=settings.showPron;$('fontSize').value=settings.fontSize}function saveSettings(){settings={translation:$('translation').value,lang:$('lang').value,showPron:$('showPron').checked,fontSize:Number($('fontSize').value)};localStorage.nurLocalSettings=JSON.stringify(settings)}function prepareAudio(){if(!navigator.onLine)return toast('Connexion requise pour préparer l’audio');const s=corpora.ar[current-1];Promise.all(s.ayahs.map(v=>fetch(audioUrl(v.number),{mode:'no-cors'}))).then(()=>toast('Audio placé dans le cache Android')).catch(()=>toast('Téléchargement interrompu'))}function toast(t){const n=$('notice');n.textContent=t;n.classList.remove('hidden');setTimeout(()=>n.classList.add('hidden'),3500)}addEventListener('offline',()=>toast('Vous êtes hors ligne'));boot();
-</script></body></html>
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#081512">
+  <title>Nūr — Le Coran hors ligne</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="splash" class="splash" aria-label="Chargement"><img src="nur-logo.png" alt="Nūr"><span></span></div>
+
+  <header class="desktop-header">
+    <button class="brand" data-view="home" aria-label="Accueil"><img src="nur-logo.png" alt=""><span>Nūr</span></button>
+    <nav><button data-view="home" data-i18n="home">Accueil</button><button data-view="read" data-i18n="read">Lire</button><button data-fqih>Fqih</button><button data-view="favorites" data-i18n="favorites">Favoris</button></nav>
+    <div class="header-actions"><button class="round-button" data-theme aria-label="Changer le thème"><i class="theme-icon"></i></button><button class="round-button settings-button" data-settings aria-label="Paramètres"><i class="settings-icon"></i></button></div>
+  </header>
+
+  <main>
+    <section id="view-home" class="view home-view active">
+      <div class="home-orb orb-one"></div><div class="home-orb orb-two"></div>
+      <div class="home-copy reveal">
+        <p class="eyebrow"><span></span><b>Nūr · القرآن الكريم</b><span></span></p>
+        <h1 data-i18n="heroTitle">Le Coran,<br><em>toujours avec vous.</em></h1>
+        <p data-i18n="heroLead">Lisez Hafs et Warsh, recherchez, mémorisez et retrouvez vos traductions sans aucune connexion.</p>
+        <button class="primary" id="homeChoose"><span data-i18n="chooseSurah">Choisir une sourate</span><b>→</b></button>
+        <div class="offline-seal"><i></i><span data-i18n="offlineReady">Lecture entièrement hors ligne</span></div>
+      </div>
+      <section class="home-features reveal delay-one">
+        <article><b>01</b><h2 data-i18n="featureRead">Hafs & Warsh</h2><p data-i18n="featureReadText">Les 114 sourates et leurs données sont intégrées à l’application.</p></article>
+        <article><b>02</b><h2 data-i18n="featureStudy">Étudier</h2><p data-i18n="featureStudyText">Prononciation, traductions et couleurs de tajwīd disponibles partout.</p></article>
+        <article><b>03</b><h2 data-i18n="featureKeep">Continuer</h2><p data-i18n="featureKeepText">Favoris, progression et préférences restent sur votre téléphone.</p></article>
+      </section>
+      <section class="about reveal delay-two"><small data-i18n="aboutLabel">À PROPOS</small><h2 data-i18n="aboutTitle">Une lumière qui vous accompagne.</h2><p data-i18n="aboutText">Nūr a été créé par Anas Youbi, 14 ans, comme sadaqa jariya. Les textes sont conservés localement pour rester accessibles à tout moment.</p></section>
+      <footer><span>© 2026 Nūr</span><span>AlQuran Cloud · Quranpedia</span><a href="https://github.com/NurQuran/Nur" data-external>GitHub ↗</a></footer>
+    </section>
+
+    <section id="view-read" class="view read-view">
+      <aside class="surah-panel" id="surahPanel">
+        <div class="panel-title"><small data-i18n="offlineLibrary">BIBLIOTHÈQUE HORS LIGNE</small><h2 data-i18n="chooseSurah">Choisir une sourate</h2></div>
+        <label class="search-box"><i></i><input id="surahSearch" type="search" autocomplete="off" data-i18n-placeholder="searchSurah" placeholder="Rechercher une sourate"></label>
+        <div id="surahList" class="surah-list"></div>
+      </aside>
+      <article class="reading-area" id="readingArea">
+        <button class="mobile-library-button" id="mobileLibrary">← <span data-i18n="allSurahs">Toutes les sourates</span></button>
+        <div class="reader-toolbar">
+          <div class="offline-state"><i></i><span data-i18n="storedLocally">Textes conservés sur cet appareil</span></div>
+          <div class="toolbar-actions"><button id="jumpButton" class="soft-button" data-i18n="goToVerse">Aller au verset</button><button id="favoriteButton" class="soft-button">♡ <span data-i18n="addFavorite">Mettre en favoris</span></button></div>
+        </div>
+        <header class="surah-heading">
+          <button id="previousSurah" aria-label="Sourate précédente">←</button>
+          <div><small id="chapterNumber"></small><h2 id="surahName"></h2><p id="surahMeta"></p></div>
+          <strong id="surahArabic" lang="ar" dir="rtl"></strong>
+          <button id="nextSurah" aria-label="Sourate suivante">→</button>
+        </header>
+        <div id="basmala" class="basmala" lang="ar" dir="rtl">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
+        <div class="surah-actions"><button class="online-action" id="playSurah">▶ <span data-i18n="listenOnline">Écouter en ligne</span></button><button class="explain-action" data-fqih>Fqih · <span data-i18n="explainOnline">Expliquer en ligne</span></button></div>
+        <div id="verseStack" class="verse-stack"></div>
+        <div class="surah-closing"><span></span><p lang="ar" dir="rtl">صَدَقَ ٱللَّهُ ٱلْعَظِيمُ</p><small>Sadaqa-llāhu l-ʿaẓīm</small></div>
+        <button id="markRead" class="mark-read" data-i18n="markRead">✓ Marquer cette sourate comme lue</button>
+      </article>
+    </section>
+
+    <section id="view-favorites" class="view favorites-view">
+      <div class="page-intro reveal"><small data-i18n="yourSpace">VOTRE ESPACE</small><h1 data-i18n="favorites">Favoris</h1><p data-i18n="favoritesLead">Vos sourates et votre progression sont conservées uniquement sur cet appareil.</p></div>
+      <section class="progress-card reveal delay-one"><div><small data-i18n="personalProgress">PROGRESSION PERSONNELLE</small><h2 data-i18n="yourJourney">Votre parcours</h2></div><article><b id="readCount">0</b><span>/ 114 <span data-i18n="surahs">sourates</span></span></article><article><b id="favoriteCount">0</b><span data-i18n="favorites">Favoris</span></article></section>
+      <div id="favoriteGrid" class="favorite-grid"></div>
+    </section>
+
+    <section id="view-fqih" class="view fqih-view">
+      <div class="fqih-card reveal"><span>Fqih</span><small data-i18n="onlineOnly">CONNEXION REQUISE</small><h1>Fqih</h1><p data-i18n="fqihOnlineText">Fqih utilise une intelligence artificielle en ligne. La lecture du Coran reste entièrement disponible sans connexion.</p><button class="primary" data-fqih><span data-i18n="openFqih">Ouvrir Fqih en ligne</span><b>→</b></button></div>
+    </section>
+  </main>
+
+  <nav class="mobile-nav" aria-label="Navigation principale">
+    <span class="nav-highlight"></span>
+    <button data-view="home"><i class="home-icon"></i><span data-i18n="home">Accueil</span></button>
+    <button data-view="read"><i class="book-icon"></i><span data-i18n="read">Lire</span></button>
+    <button data-view="fqih"><i class="fqih-icon">F</i><span>Fqih</span></button>
+    <button data-view="favorites"><i class="heart-icon">♡</i><span data-i18n="favorites">Favoris</span></button>
+    <button data-theme aria-label="Changer le thème"><i class="theme-icon"></i></button>
+    <button data-settings aria-label="Paramètres"><i class="settings-icon"></i></button>
+  </nav>
+
+  <div id="settingsLayer" class="modal-layer" hidden>
+    <section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <header><div><small data-i18n="readingPreferences">PRÉFÉRENCES DE LECTURE</small><h2 id="settingsTitle" data-i18n="settings">Paramètres</h2></div><button id="closeSettings" aria-label="Fermer">×</button></header>
+      <div class="settings-content">
+        <article class="setting-card"><span class="setting-number">01</span><div><h3 data-i18n="language">Langue</h3><p data-i18n="languageText">Choisissez la langue de toute l’interface.</p><div class="choice-row" id="languageChoices"><button data-language="fr">Français</button><button data-language="en">English</button><button data-language="ar">العربية</button></div></div></article>
+        <article class="setting-card"><span class="setting-number">02</span><div><h3 data-i18n="recitation">Lecture</h3><p data-i18n="recitationText">Choisissez le muṣḥaf affiché hors ligne.</p><div class="choice-row" id="riwayahChoices"><button data-riwayah="hafs">Ḥafṣ</button><button data-riwayah="warsh">Warsh</button></div></div></article>
+        <article class="setting-card"><span class="setting-number">03</span><div><h3 data-i18n="display">Affichage</h3><div class="switch-list"><label><span data-i18n="tajweedColors">Couleurs de tajwīd</span><input id="tajweedToggle" type="checkbox"></label><label><span data-i18n="pronunciation">Prononciation</span><input id="pronunciationToggle" type="checkbox"></label><label><span data-i18n="frenchTranslation">Traduction française</span><input id="frenchToggle" type="checkbox"></label><label><span data-i18n="englishTranslation">Traduction anglaise</span><input id="englishToggle" type="checkbox"></label></div><label class="font-range"><span data-i18n="arabicSize">Taille du texte arabe</span><input id="fontSize" type="range" min="28" max="58" step="2"></label></div></article>
+        <article class="setting-card"><span class="setting-number">04</span><div><h3 data-i18n="studyMode">Mémorisation</h3><p data-i18n="studyText">Masquez temporairement l’arabe pour vous exercer.</p><label class="single-switch"><span data-i18n="hideArabic">Masquer le texte arabe</span><input id="memoryToggle" type="checkbox"></label><div class="study-actions"><button id="focusButton" data-i18n="focus">Mode concentration</button><button id="imageButton" data-i18n="createImage">Créer une image de la sourate</button></div></div></article>
+        <article class="setting-card offline-card"><span class="setting-number">✓</span><div><h3 data-i18n="offlineInstalled">Contenu hors ligne installé</h3><p id="offlineSummary"></p></div></article>
+        <button id="resetData" class="reset-data" data-i18n="resetData">Effacer les favoris, la progression et les réglages</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="onboarding" class="modal-layer onboarding" hidden>
+    <section class="onboarding-card"><div class="onboarding-progress"><i></i><i></i><i></i></div><div id="onboardingContent"></div><div class="onboarding-actions"><button id="onboardingBack">←</button><button id="onboardingNext"><span></span> →</button></div></section>
+  </div>
+
+  <div id="resumeToast" class="resume-toast" hidden><div><small data-i18n="continueReading">CONTINUER LA LECTURE</small><strong id="resumeName"></strong></div><button id="resumeButton" data-i18n="resume">Reprendre</button><button id="dismissResume" aria-label="Fermer">×</button></div>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <button id="focusExit" class="focus-exit" aria-label="Quitter le mode concentration">×</button>
+  <div id="mediaPlayer" class="media-player" hidden><button id="mediaToggle">Ⅱ</button><div><small data-i18n="onlineAudio">AUDIO EN LIGNE</small><strong id="mediaTitle"></strong><progress id="mediaProgress" max="100" value="0"></progress></div><button id="mediaClose">×</button></div>
+  <audio id="audio"></audio>
+
+  <script src="data/quran-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

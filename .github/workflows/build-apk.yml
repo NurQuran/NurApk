@@ -1,4 +1,4 @@
-name: Build Nur APK
+name: Build Nūr Offline APK
 
 on:
   workflow_dispatch:
@@ -12,11 +12,12 @@ jobs:
       - name: Get source
         uses: actions/checkout@v4
 
-      - name: Restore Android project files
-        run: unzip -o nur-apk-source.zip build.gradle settings.gradle gradle.properties app/proguard-rules.pro app/src/main/AndroidManifest.xml 'app/src/main/res/*'
-
-      - name: Keep the lightweight web app package
-        run: rm -rf app/src/main/assets/data app/src/main/assets/index.html
+      - name: Validate the embedded offline library
+        run: |
+          test -f app/src/main/assets/index.html
+          test -f app/src/main/assets/data/quran-data.js
+          node --check app/src/main/assets/app.js
+          grep -q "window.NUR_QURAN_DATA" app/src/main/assets/data/quran-data.js
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -38,6 +39,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Nur-Android-APK
+          name: Nur-Android-Offline-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
