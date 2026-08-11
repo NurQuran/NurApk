@@ -16,6 +16,8 @@
   let lastThemeToggle = 0;
   let readingObserver = null;
   let positionSaveTimer = 0;
+  let navScrollFrame = 0;
+  let lastNavScroll = 0;
 
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
@@ -98,6 +100,9 @@
       const verse=Number(visible.target.id.replace("verse-",""));
       if(!verse||verse===state.currentVerse)return;
       state.currentVerse=verse;
+      if($("#mobileVerseSelect"))$("#mobileVerseSelect").value=String(verse);
+      if($("#mobilePreviousVerse"))$("#mobilePreviousVerse").disabled=verse<=1;
+      if($("#mobileNextVerse"))$("#mobileNextVerse").disabled=verse>=verses().length;
       clearTimeout(positionSaveTimer);
       positionSaveTimer=setTimeout(saveState,180);
     },{rootMargin:"-34% 0px -48% 0px",threshold:.01});
@@ -110,11 +115,20 @@
     $("#chapterNumber").textContent=`${t("chapter")} ${String(item.number).padStart(2,"0")}`;
     $("#surahName").textContent=item.nameLatin;
     $("#surahArabic").textContent=item.nameArabic;
-    $("#surahMeta").textContent=`${item.revelation==="Meccan"?t("meccan"):t("medinan")} · ${items.length} ${t("verses")} · ${state.riwayah==="warsh"?"Warsh":"Ḥafṣ"}`;
+    $("#surahMeta").textContent=`${item.revelation==="Meccan"?t("meccan"):t("medinan")} · ${items.length} ${t("verses")}`;
     $("#previousSurah").disabled=item.number===1; $("#nextSurah").disabled=item.number===114;
+    $("#mobilePreviousSurah").disabled=item.number===1; $("#mobileNextSurah").disabled=item.number===114;
+    $("#mobilePreviousSurah").textContent=state.language==="ar"?"→ السورة السابقة":state.language==="en"?"← Previous surah":"← Sourate précédente";
+    $("#mobileNextSurah").textContent=state.language==="ar"?"السورة التالية ←":state.language==="en"?"Next surah →":"Sourate suivante →";
     $("#basmala").hidden=item.number===9;
     $("#favoriteButton").classList.toggle("active",isFavorite);
     $("#favoriteButton").innerHTML=`${isFavorite?"♥":"♡"} <span>${isFavorite?t("removeFavorite"):t("addFavorite")}</span>`;
+    $("#mobileFavoriteButton").classList.toggle("active",isFavorite);
+    $("#mobileFavoriteButton").innerHTML=`${isFavorite?"♥":"♡"} <span>${isFavorite?t("removeFavorite"):t("addFavorite")}</span>`;
+    state.currentVerse=Math.max(1,Math.min(items.length||1,state.currentVerse||1));
+    $("#mobileVerseSelect").innerHTML=items.map(verse=>`<option value="${verse.n}"${verse.n===state.currentVerse?" selected":""}>${state.language==="ar"?`الآية ${verse.n}`:state.language==="en"?`Verse ${verse.n}`:`Verset ${verse.n}`}</option>`).join("");
+    $("#mobilePreviousVerse").disabled=state.currentVerse<=1;
+    $("#mobileNextVerse").disabled=state.currentVerse>=items.length;
     $("#markRead").classList.toggle("done",isRead); $("#markRead").textContent=isRead?t("markedRead"):t("markRead");
     $("#verseStack").innerHTML=items.map((verse,index)=>{
       const arabic=state.riwayah==="hafs"&&state.tajweed&&verse.tajweed?verse.tajweed:escapeHtml(verse.arabic);
@@ -194,9 +208,21 @@
   function applyTheme(theme){state.theme=theme==="light"?"light":"dark";document.documentElement.dataset.theme=state.theme;updateThemeIcons();saveState()}
   function toggleTheme(event){event?.preventDefault();event?.stopPropagation();event?.stopImmediatePropagation?.();const now=Date.now();if(now-lastThemeToggle<450)return;lastThemeToggle=now;applyTheme(document.documentElement.dataset.theme==="light"?"dark":"light")}
 
+  function bindThemeControls(){
+    $$('button[data-theme]').forEach(button=>{
+      let press=null;
+      button.addEventListener("pointerdown",event=>{event.stopPropagation();const rect=button.getBoundingClientRect();if(event.clientX>=rect.left&&event.clientX<=rect.right&&event.clientY>=rect.top&&event.clientY<=rect.bottom)press={x:event.clientX,y:event.clientY,at:performance.now()}});
+      button.addEventListener("pointerup",event=>{event.preventDefault();event.stopPropagation();const start=press,rect=button.getBoundingClientRect();press=null;if(start&&event.clientX>=rect.left&&event.clientX<=rect.right&&event.clientY>=rect.top&&event.clientY<=rect.bottom&&performance.now()-start.at<900&&Math.hypot(event.clientX-start.x,event.clientY-start.y)<12)toggleTheme(event)});
+      button.addEventListener("pointercancel",()=>{press=null});
+      button.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();event.stopImmediatePropagation()});
+      button.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();toggleTheme(event)}});
+    });
+  }
+
   function goToVerse(){
     const value=prompt(t("versePrompt"),"1"); if(value===null)return; const number=Number(value), target=$(`#verse-${number}`); if(!target){showToast(t("invalidVerse"));return;}state.currentVerse=number;saveState();target.scrollIntoView({behavior:"smooth",block:"center"});
   }
+  function goToOfflineVerse(number){const target=$(`#verse-${number}`);if(!target)return;state.currentVerse=number;saveState();$("#mobileVerseSelect").value=String(number);$("#mobilePreviousVerse").disabled=number<=1;$("#mobileNextVerse").disabled=number>=verses().length;target.scrollIntoView({behavior:"smooth",block:"center"})}
 
   async function createSurahImage(){
     try{
@@ -228,9 +254,10 @@
 
   function bind(){
     $$('[data-view]').forEach(button=>button.addEventListener("click",()=>showView(button.dataset.view,{library:button.dataset.view==="read"?true:undefined})));
-    $$('[data-theme]').forEach(button=>button.addEventListener("click",toggleTheme));$$('[data-settings]').forEach(button=>button.addEventListener("click",openSettings));$$('[data-fqih]').forEach(button=>button.addEventListener("click",openFqih));
+    bindThemeControls();$$('[data-settings]').forEach(button=>button.addEventListener("click",openSettings));$$('[data-fqih]').forEach(button=>button.addEventListener("click",openFqih));
     $("#homeChoose").onclick=()=>showView("read",{library:true});$("#homeResume").onclick=()=>openSurah(state.current);$("#mobileLibrary").onclick=()=>{libraryOpen=true;$("#view-read").classList.add("library-open");scrollTo(0,0)};$("#surahSearch").oninput=event=>renderSurahList(event.target.value);
     $("#previousSurah").onclick=()=>openSurah(state.current-1);$("#nextSurah").onclick=()=>openSurah(state.current+1);$("#favoriteButton").onclick=toggleFavorite;$("#markRead").onclick=markRead;$("#jumpButton").onclick=goToVerse;$("#playSurah").onclick=playSurah;
+    $("#mobilePreviousSurah").onclick=()=>openSurah(state.current-1);$("#mobileNextSurah").onclick=()=>openSurah(state.current+1);$("#mobileFavoriteButton").onclick=toggleFavorite;$("#mobileVerseSelect").onchange=event=>goToOfflineVerse(Number(event.target.value));$("#mobilePreviousVerse").onclick=()=>goToOfflineVerse(Math.max(1,state.currentVerse-1));$("#mobileNextVerse").onclick=()=>goToOfflineVerse(Math.min(verses().length,state.currentVerse+1));
     $("#closeSettings").onclick=closeSettings;$("#settingsLayer").onclick=event=>{if(event.target.id==="settingsLayer")closeSettings()};
     $$('[data-language]').forEach(button=>button.onclick=()=>{state.language=button.dataset.language;saveState();applyLanguage()});$$('[data-riwayah]').forEach(button=>button.onclick=()=>{state.riwayah=button.dataset.riwayah;state.reciter=state.riwayah==="warsh"?"hicham-lharraz":"ar.alafasy";if(state.riwayah==="warsh")state.tajweed=false;saveState();renderSurah();updateSettings()});
     $("#voiceSelect").onchange=event=>setOption("reciter",event.target.value);
@@ -244,6 +271,7 @@
     document.addEventListener("click",event=>{const control=event.target.closest?.("button,a[href],select,input");if(!control||control.disabled)return;haptic(control.matches(".reset-data")?"warning":control.matches(".primary,.online-action,.mark-read,.download-audio-button")?"medium":"selection")},true);
     addEventListener("offline",()=>showToast(t("offlineNotice")));
     addEventListener("online",()=>{saveState();showToast(state.language==="ar"?"عاد الاتصال — جارٍ استعادة صفحتك…":state.language==="en"?"Back online — restoring your page…":"Connexion rétablie — restauration de votre page…");setTimeout(()=>window.NurAndroid?.openOnline?.(),650)});
+    addEventListener("scroll",()=>{if(navScrollFrame)return;navScrollFrame=requestAnimationFrame(()=>{const current=Math.max(0,scrollY),nav=$(".mobile-nav");if(currentView!=="read"||libraryOpen||current<80)nav.classList.remove("is-hidden");else if(current>lastNavScroll+8)nav.classList.add("is-hidden");else if(current<lastNavScroll-8)nav.classList.remove("is-hidden");lastNavScroll=current;navScrollFrame=0})},{passive:true});
   }
 
   function init(){

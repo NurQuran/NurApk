@@ -42,19 +42,31 @@
         <div id="surahList" class="surah-list"></div>
       </aside>
       <article class="reading-area" id="readingArea">
-        <button class="mobile-library-button" id="mobileLibrary">← <span data-i18n="allSurahs">Toutes les sourates</span></button>
+        <button class="mobile-library-button" id="mobileLibrary">← <span data-i18n="chooseSurah">Choisir une sourate</span></button>
+        <div class="offline-mobile-chapter-nav">
+          <button id="mobilePreviousSurah">← Sourate précédente</button>
+          <button id="mobileNextSurah">Sourate suivante →</button>
+        </div>
+        <div class="offline-mobile-reading-top">
+          <div class="offline-verse-jump">
+            <button id="mobilePreviousVerse" aria-label="Verset précédent">←</button>
+            <label><span data-i18n="goToVerse">Aller au verset</span><select id="mobileVerseSelect"></select></label>
+            <button id="mobileNextVerse" aria-label="Verset suivant">→</button>
+          </div>
+          <button id="mobileFavoriteButton" class="mobile-favorite-button">♡ <span data-i18n="addFavorite">Mettre en favoris</span></button>
+        </div>
         <div class="reader-toolbar">
           <div class="offline-state"><i></i><span data-i18n="storedLocally">Textes conservés sur cet appareil</span></div>
           <div class="toolbar-actions"><button id="jumpButton" class="soft-button" data-i18n="goToVerse">Aller au verset</button><button id="favoriteButton" class="soft-button">♡ <span data-i18n="addFavorite">Mettre en favoris</span></button></div>
         </div>
         <header class="surah-heading">
-          <button id="previousSurah" aria-label="Sourate précédente">←</button>
+          <button id="previousSurah" class="desktop-surah-arrow" aria-label="Sourate précédente">←</button>
           <div><small id="chapterNumber"></small><h2 id="surahName"></h2><p id="surahMeta"></p></div>
           <strong id="surahArabic" lang="ar" dir="rtl"></strong>
-          <button id="nextSurah" aria-label="Sourate suivante">→</button>
+          <button id="nextSurah" class="desktop-surah-arrow" aria-label="Sourate suivante">→</button>
         </header>
         <div id="basmala" class="basmala" lang="ar" dir="rtl">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
-        <div class="surah-actions"><button class="online-action" id="playSurah"><img class="ui-icon" src="icons/play.png" alt=""><span data-i18n="listenOnline">Écouter en ligne</span></button><button class="explain-action" data-fqih>Fqih · <span data-i18n="explainOnline">Expliquer en ligne</span></button></div>
+        <div class="surah-actions"><button class="online-action" id="playSurah"><img class="ui-icon" src="icons/play.png" alt=""><span data-i18n="listenOnline">Écouter en ligne</span></button><button class="explain-action" data-fqih>✦ <span data-i18n="explainOnline">Expliquer la sourate</span></button></div>
         <div id="verseStack" class="verse-stack"></div>
         <div class="surah-closing"><span></span><p lang="ar" dir="rtl">صَدَقَ ٱللَّهُ ٱلْعَظِيمُ</p><small>Sadaqa-llāhu l-ʿaẓīm</small></div>
         <button id="markRead" class="mark-read" data-i18n="markRead">✓ Marquer cette sourate comme lue</button>

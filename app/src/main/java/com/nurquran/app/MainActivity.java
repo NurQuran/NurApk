@@ -70,18 +70,9 @@ public class MainActivity extends Activity {
         getWindow().setNavigationBarColor(Color.BLACK);
         preferences = getSharedPreferences("nur-shared-state", MODE_PRIVATE);
 
-        FrameLayout root = new FrameLayout(this);
         webView = new WebView(this);
         webView.setBackgroundColor(Color.BLACK);
-        root.addView(webView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        if (getResources().getConfiguration().screenWidthDp <= 700) {
-            nativeNav = createNativeNavigation();
-            FrameLayout.LayoutParams navParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, dp(80), Gravity.BOTTOM);
-            navParams.setMargins(dp(9), 0, dp(9), dp(11));
-            root.addView(nativeNav, navParams);
-            nativeNav.setVisibility(View.GONE);
-        }
-        setContentView(root);
+        setContentView(webView);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -124,10 +115,6 @@ public class MainActivity extends Activity {
                 if (url != null && url.startsWith("file:///android_asset/")) {
                     if (nativeNav != null) nativeNav.setVisibility(View.GONE);
                     view.evaluateJavascript("window.NurOffline&&window.NurOffline.syncSharedState&&window.NurOffline.syncSharedState()", null);
-                } else if (url != null && url.contains(APP_HOST) && nativeNav != null) {
-                    nativeNav.setVisibility(View.VISIBLE);
-                    view.evaluateJavascript("document.documentElement.classList.add('nur-native-android')", null);
-                    updateNativeNavigation(url);
                 }
             }
 
