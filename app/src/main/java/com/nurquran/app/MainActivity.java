@@ -288,7 +288,10 @@ public class MainActivity extends Activity {
     private File audioFile(String key) { return new File(audioDirectory(), safeKey(key) + ".mp3"); }
 
     private void sendProgress(int surah, int done, int total, boolean finished, boolean failed) {
-        runOnUiThread(() -> webView.evaluateJavascript("window.NurOffline&&window.NurOffline.onAudioDownloadProgress(" + surah + "," + done + "," + total + "," + finished + "," + failed + ")", null));
+        String detail = "{surah:" + surah + ",done:" + done + ",total:" + total + ",finished:" + finished + ",failed:" + failed + "}";
+        runOnUiThread(() -> webView.evaluateJavascript(
+            "window.NurOffline&&window.NurOffline.onAudioDownloadProgress(" + surah + "," + done + "," + total + "," + finished + "," + failed + ");" +
+            "window.dispatchEvent(new CustomEvent('nur-native-audio-progress',{detail:" + detail + "}))", null));
     }
 
     private final class OfflineBridge {

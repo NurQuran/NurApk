@@ -59,9 +59,13 @@
   }
 
   function showView(view, options={}){
+    const order={home:0,read:1,fqih:2,favorites:3};
+    const previous=currentView;
+    const direction=(order[view]??0)>=(order[previous]??0)?"view-forward":"view-back";
     currentView = view;
     state.currentView=view;
-    $$(".view").forEach(node => node.classList.toggle("active", node.id === `view-${view}`));
+    $$(".view").forEach(node => {node.classList.toggle("active", node.id === `view-${view}`);node.classList.remove("view-forward","view-back")});
+    const target=$(`#view-${view}`);if(target){void target.offsetWidth;target.classList.add(direction)}
     if(view === "read"){
       if(options.library !== undefined) libraryOpen = options.library;
       state.libraryOpen=libraryOpen;
@@ -89,7 +93,9 @@
   }
 
   function openSurah(number){
+    const direction=number<state.current?"surah-back":"surah-forward";
     state.current=Math.max(1,Math.min(114,number)); state.currentVerse=1; saveState(); libraryOpen=false; showView("read",{library:false});
+    const area=$("#view-read .reading-area");if(area){area.classList.remove("surah-forward","surah-back");void area.offsetWidth;area.classList.add(direction)}
   }
 
   function observeReadingPosition(){
@@ -158,7 +164,7 @@
   }
 
   function showToast(message){
-    const toast=$("#toast"); toast.textContent=message; toast.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.hidden=true,3400);
+    const toast=$("#toast"); toast.textContent=message; toast.classList.remove("toast-leaving"); toast.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>{toast.classList.add("toast-leaving");toastTimer=setTimeout(()=>{toast.hidden=true;toast.classList.remove("toast-leaving")},280)},3200);
   }
   function haptic(kind="selection"){try{if(window.NurAndroid?.performHaptic){window.NurAndroid.performHaptic(kind);return}navigator.vibrate?.(kind==="warning"?[18,32,24]:kind==="medium"?18:8)}catch{}}
 
