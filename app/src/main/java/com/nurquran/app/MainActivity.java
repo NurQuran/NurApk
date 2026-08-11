@@ -5,8 +5,15 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.os.VibratorManager;
+import android.view.HapticFeedbackConstants;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -32,6 +39,7 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
     private static final String HOME_URL = "file:///android_asset/index.html";
+    private static final String ONLINE_HOME_URL = "https://nur.youbianas1.workers.dev/?source=android";
     private static final String APP_HOST = "nur.youbianas1.workers.dev";
     private static final String OFFLINE_AUDIO_HOST = "offline.nur";
     private final ExecutorService downloads = Executors.newSingleThreadExecutor();
@@ -102,8 +110,30 @@ public class MainActivity extends Activity {
             }
         });
 
-        if (savedInstanceState == null) webView.loadUrl(HOME_URL);
+        if (savedInstanceState == null) webView.loadUrl(isOnline() ? ONLINE_HOME_URL : HOME_URL);
         else webView.restoreState(savedInstanceState);
+    }
+
+    private boolean isOnline() {
+        ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        if (manager == null || manager.getActiveNetwork() == null) return false;
+        NetworkCapabilities capabilities = manager.getNetworkCapabilities(manager.getActiveNetwork());
+        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+    }
+
+    private void haptic(String kind) {
+        runOnUiThread(() -> {
+            int feedback = "warning".equals(kind) ? HapticFeedbackConstants.LONG_PRESS : "medium".equals(kind) ? HapticFeedbackConstants.CONTEXT_CLICK : HapticFeedbackConstants.CLOCK_TICK;
+            if (webView.performHapticFeedback(feedback)) return;
+            long duration = "warning".equals(kind) ? 28 : "medium".equals(kind) ? 18 : 8;
+            int amplitude = "warning".equals(kind) ? 190 : "medium".equals(kind) ? 135 : 75;
+            Vibrator vibrator;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) vibrator = ((VibratorManager) getSystemService(VIBRATOR_MANAGER_SERVICE)).getDefaultVibrator();
+            else vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+            if (vibrator == null || !vibrator.hasVibrator()) return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) vibrator.vibrate(VibrationEffect.createOneShot(duration, amplitude));
+            else vibrator.vibrate(duration);
+        });
     }
 
     private File audioDirectory() {
@@ -135,6 +165,16 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void clearState() {
             preferences.edit().remove("state").apply();
+        }
+
+        @JavascriptInterface
+        public void performHaptic(String kind) {
+            haptic(kind == null ? "selection" : kind);
+        }
+
+        @JavascriptInterface
+        public void openOffline() {
+            runOnUiThread(() -> webView.loadUrl(HOME_URL));
         }
 
         @JavascriptInterface

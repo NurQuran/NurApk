@@ -40,3 +40,6 @@ New-Canvas "heart" { param($g,$p)
 }
 New-Canvas "close" { param($g,$p) $g.DrawLine($p,25,25,71,71);$g.DrawLine($p,71,25,25,71) }
 New-Canvas "download" { param($g,$p) $g.DrawLine($p,48,15,48,61);$g.DrawLine($p,30,45,48,63);$g.DrawLine($p,66,45,48,63);$g.DrawLine($p,21,79,75,79) }
+New-Canvas "language" { param($g,$p)
+  $g.DrawEllipse($p,14,14,68,68);$g.DrawEllipse($p,32,14,32,68);$g.DrawLine($p,15,48,81,48);$g.DrawArc($p,19,27,58,42,0,180);$g.DrawArc($p,19,27,58,42,180,180)
+}
