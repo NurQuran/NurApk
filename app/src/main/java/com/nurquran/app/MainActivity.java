@@ -3,6 +3,7 @@ package com.nurquran.app;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -35,6 +36,7 @@ public class MainActivity extends Activity {
     private static final String OFFLINE_AUDIO_HOST = "offline.nur";
     private final ExecutorService downloads = Executors.newSingleThreadExecutor();
     private WebView webView;
+    private SharedPreferences preferences;
 
     @SuppressLint({"SetJavaScriptEnabled", "JavascriptInterface"})
     @Override
@@ -42,6 +44,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         getWindow().setStatusBarColor(Color.BLACK);
         getWindow().setNavigationBarColor(Color.BLACK);
+        preferences = getSharedPreferences("nur-shared-state", MODE_PRIVATE);
 
         webView = new WebView(this);
         webView.setBackgroundColor(Color.BLACK);
@@ -83,6 +86,14 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (url != null && url.startsWith("file:///android_asset/")) {
+                    view.evaluateJavascript("window.NurOffline&&window.NurOffline.syncSharedState&&window.NurOffline.syncSharedState()", null);
+                }
+            }
+
+            @Override
             public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
                 if (request.isForMainFrame() && !"file".equals(request.getUrl().getScheme())) {
                     Toast.makeText(MainActivity.this, "Cette fonction nécessite une connexion. La lecture hors ligne reste disponible.", Toast.LENGTH_LONG).show();
@@ -109,6 +120,23 @@ public class MainActivity extends Activity {
     }
 
     private final class OfflineBridge {
+        @JavascriptInterface
+        public String getState() {
+            return preferences.getString("state", "");
+        }
+
+        @JavascriptInterface
+        public void setState(String stateJson) {
+            if (stateJson != null && stateJson.length() <= 200000) {
+                preferences.edit().putString("state", stateJson).apply();
+            }
+        }
+
+        @JavascriptInterface
+        public void clearState() {
+            preferences.edit().remove("state").apply();
+        }
+
         @JavascriptInterface
         public boolean hasAudio(String key) {
             File file = audioFile(key);
