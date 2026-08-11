@@ -5,7 +5,7 @@
   const META = window.NUR_QURAN_META || {};
   const STORAGE_KEY = "nur-android-offline-v1";
   const FQIH_URL = "https://nur.youbianas1.workers.dev/assistant?source=android";
-  const DEFAULTS = { language:"fr", theme:"dark", riwayah:"hafs", reciter:"ar.alafasy", tajweed:false, pronunciation:true, french:true, english:true, fontSize:40, memory:false, current:1, currentVerse:1, favorites:[], read:[], minutes:0, goal:10, onboarded:false };
+  const DEFAULTS = { language:"fr", theme:"dark", riwayah:"hafs", reciter:"ar.alafasy", tajweed:false, pronunciation:true, french:true, english:true, fontSize:40, memory:false, current:1, currentVerse:1, currentView:"home", libraryOpen:true, favorites:[], read:[], minutes:0, goal:10, onboarded:false };
   let state = loadState();
   let currentView = "home";
   let libraryOpen = true;
@@ -58,15 +58,18 @@
 
   function showView(view, options={}){
     currentView = view;
+    state.currentView=view;
     $$(".view").forEach(node => node.classList.toggle("active", node.id === `view-${view}`));
     if(view === "read"){
       if(options.library !== undefined) libraryOpen = options.library;
+      state.libraryOpen=libraryOpen;
       $("#view-read").classList.toggle("library-open", libraryOpen);
       renderSurahList($("#surahSearch").value);
       if(!libraryOpen) renderSurah();
     }
     if(view === "favorites") renderFavorites();
     updateNav();
+    saveState();
     scrollTo({top:0,behavior:options.instant?"auto":"smooth"});
   }
 
@@ -221,7 +224,7 @@
 
   function showResume(){if(!state.onboarded||!state.current)return;$("#resumeName").textContent=DATA[state.current-1]?.nameLatin||"";$("#resumeToast").hidden=false;}
 
-  function syncSharedState(){try{const value=window.NurAndroid?.getState?.();if(!value)return;state={...state,...JSON.parse(value)};document.documentElement.dataset.theme=state.theme;updateThemeIcons();applyLanguage();showView(currentView,{instant:true})}catch{}}
+  function syncSharedState(){try{const value=window.NurAndroid?.getState?.();if(value)state={...state,...JSON.parse(value)};currentView=state.currentView==="assistant"?"fqih":state.currentView||currentView;libraryOpen=state.libraryOpen!==false;document.documentElement.dataset.theme=state.theme;updateThemeIcons();applyLanguage();showView(currentView,{instant:true,library:libraryOpen});if(currentView==="read"&&!libraryOpen&&state.currentVerse>1)setTimeout(()=>document.querySelector(`#verse-${state.currentVerse}`)?.scrollIntoView({block:"center"}),260)}catch{}}
 
   function bind(){
     $$('[data-view]').forEach(button=>button.addEventListener("click",()=>showView(button.dataset.view,{library:button.dataset.view==="read"?true:undefined})));
@@ -240,7 +243,7 @@
     audio.onplay=()=>$("#mediaToggle img").src="icons/pause.png";audio.onpause=()=>$("#mediaToggle img").src="icons/play.png";audio.ontimeupdate=()=>$("#mediaProgress").value=audio.duration?audio.currentTime/audio.duration*100:0;audio.onended=()=>{audioIndex++;if(audioIndex<audioQueue.length)startAudio(audioQueue[audioIndex]);else $("#mediaPlayer").hidden=true};audio.onerror=()=>showToast(t("audioUnavailable"));
     document.addEventListener("click",event=>{const control=event.target.closest?.("button,a[href],select,input");if(!control||control.disabled)return;haptic(control.matches(".reset-data")?"warning":control.matches(".primary,.online-action,.mark-read,.download-audio-button")?"medium":"selection")},true);
     addEventListener("offline",()=>showToast(t("offlineNotice")));
-    addEventListener("online",()=>{saveState();showToast(t("onlineAudio"));setTimeout(()=>window.NurAndroid?.openOnline?.(),500)});
+    addEventListener("online",()=>{saveState();showToast(state.language==="ar"?"عاد الاتصال — جارٍ استعادة صفحتك…":state.language==="en"?"Back online — restoring your page…":"Connexion rétablie — restauration de votre page…");setTimeout(()=>window.NurAndroid?.openOnline?.(),650)});
   }
 
   function init(){
