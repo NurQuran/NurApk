@@ -75,20 +75,37 @@ button[data-theme]{position:relative!important;inset:auto!important;max-width:58
 @media(prefers-reduced-motion:reduce){.mobile-library-button,.offline-mobile-chapter-nav,.offline-mobile-reading-top,.surah-heading,.basmala{animation:none!important}}
 
 /* Direction-aware navigation and notification motion */
-.view.active.view-forward{animation:offline-view-from-right .58s cubic-bezier(.16,1,.3,1) both}
-.view.active.view-back{animation:offline-view-from-left .58s cubic-bezier(.16,1,.3,1) both}
-[dir="rtl"] .view.active.view-forward{animation-name:offline-view-from-left}
-[dir="rtl"] .view.active.view-back{animation-name:offline-view-from-right}
+html,body{width:100%;max-width:100%;overflow-x:clip}
+.view.active.view-forward,.view.active.view-back,.view.active.view-exit-left,.view.active.view-exit-right{animation:none!important;transform:none!important;filter:none!important}
+.view.active.view-forward>*{animation:offline-view-from-right .58s cubic-bezier(.16,1,.3,1) both}
+.view.active.view-back>*{animation:offline-view-from-left .58s cubic-bezier(.16,1,.3,1) both}
+.view.active.view-exit-left>*{animation:offline-view-to-left .23s ease-in both!important}
+.view.active.view-exit-right>*{animation:offline-view-to-right .23s ease-in both!important}
+[dir="rtl"] .view.active.view-forward>*{animation-name:offline-view-from-left}
+[dir="rtl"] .view.active.view-back>*{animation-name:offline-view-from-right}
+[dir="rtl"] .view.active.view-exit-left>*{animation-name:offline-view-to-right!important}
+[dir="rtl"] .view.active.view-exit-right>*{animation-name:offline-view-to-left!important}
+.surah-item,.favorite-card{animation:offline-list-item-in .5s cubic-bezier(.16,1,.3,1) both;animation-delay:min(calc(var(--index,0)*16ms),180ms)}
 .reading-area.surah-forward{animation:offline-view-from-right .58s cubic-bezier(.16,1,.3,1) both}
 .reading-area.surah-back{animation:offline-view-from-left .58s cubic-bezier(.16,1,.3,1) both}
 [dir="rtl"] .reading-area.surah-forward{animation-name:offline-view-from-left}
 [dir="rtl"] .reading-area.surah-back{animation-name:offline-view-from-right}
 .toast{will-change:transform,opacity,filter;animation:offline-toast-spring .48s cubic-bezier(.16,1,.3,1) both!important}
 .toast.toast-leaving{animation:offline-toast-out .28s ease both!important}
+.resume-toast{animation:offline-resume-in .48s cubic-bezier(.16,1,.3,1) both!important}
+.resume-toast.closing{animation:offline-resume-out .26s ease both!important;pointer-events:none}
 .audio-download-status:not(:empty){display:block;animation:offline-status-in .4s cubic-bezier(.16,1,.3,1) both}
 @keyframes offline-view-from-right{from{opacity:0;transform:translateX(clamp(28px,8vw,76px));filter:blur(7px)}to{opacity:1;transform:none;filter:none}}
 @keyframes offline-view-from-left{from{opacity:0;transform:translateX(clamp(-76px,-8vw,-28px));filter:blur(7px)}to{opacity:1;transform:none;filter:none}}
+@keyframes offline-view-to-left{to{opacity:0;transform:translateX(clamp(-64px,-6vw,-24px));filter:blur(5px)}}
+@keyframes offline-view-to-right{to{opacity:0;transform:translateX(clamp(24px,6vw,64px));filter:blur(5px)}}
+@keyframes offline-list-item-in{from{opacity:0;transform:translateY(12px) scale(.985);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
 @keyframes offline-toast-spring{0%{opacity:0;transform:translate(-50%,24px) scale(.92);filter:blur(8px)}75%{opacity:1;transform:translate(-50%,-3px) scale(1.01);filter:none}100%{opacity:1;transform:translate(-50%,0);filter:none}}
 @keyframes offline-toast-out{to{opacity:0;transform:translate(-50%,18px) scale(.96);filter:blur(5px)}}
+@keyframes offline-resume-in{from{opacity:0;transform:translateY(20px) scale(.96);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes offline-resume-out{to{opacity:0;transform:translateY(18px) scale(.96);filter:blur(5px)}}
 @keyframes offline-status-in{from{opacity:0;transform:translateY(7px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
-@media(prefers-reduced-motion:reduce){.view.active.view-forward,.view.active.view-back,.reading-area.surah-forward,.reading-area.surah-back,.toast,.toast.toast-leaving,.audio-download-status:not(:empty){animation:none!important}}
+@media(max-width:900px){.resume-toast{animation-name:offline-resume-mobile-in!important}.resume-toast.closing{animation-name:offline-resume-mobile-out!important}}
+@keyframes offline-resume-mobile-in{from{opacity:0;transform:translate(-50%,20px) scale(.96);filter:blur(6px)}to{opacity:1;transform:translate(-50%,0);filter:none}}
+@keyframes offline-resume-mobile-out{to{opacity:0;transform:translate(-50%,18px) scale(.96);filter:blur(5px)}}
+@media(prefers-reduced-motion:reduce){.view.active.view-forward>*,.view.active.view-back>*,.view.active.view-exit-left>*,.view.active.view-exit-right>*,.surah-item,.favorite-card,.reading-area.surah-forward,.reading-area.surah-back,.toast,.toast.toast-leaving,.resume-toast,.resume-toast.closing,.audio-download-status:not(:empty){animation:none!important}}

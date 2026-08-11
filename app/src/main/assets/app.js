@@ -18,6 +18,8 @@
   let positionSaveTimer = 0;
   let navScrollFrame = 0;
   let lastNavScroll = 0;
+  let viewTransitionTimer = 0;
+  let resumeTimer = 0;
 
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
@@ -62,21 +64,32 @@
     const order={home:0,read:1,fqih:2,favorites:3};
     const previous=currentView;
     const direction=(order[view]??0)>=(order[previous]??0)?"view-forward":"view-back";
+    const previousNode=$(`#view-${previous}`),target=$(`#view-${view}`);
     currentView = view;
     state.currentView=view;
-    $$(".view").forEach(node => {node.classList.toggle("active", node.id === `view-${view}`);node.classList.remove("view-forward","view-back")});
-    const target=$(`#view-${view}`);if(target){void target.offsetWidth;target.classList.add(direction)}
-    if(view === "read"){
-      if(options.library !== undefined) libraryOpen = options.library;
-      state.libraryOpen=libraryOpen;
-      $("#view-read").classList.toggle("library-open", libraryOpen);
-      renderSurahList($("#surahSearch").value);
-      if(!libraryOpen) renderSurah();
-    }
-    if(view === "favorites") renderFavorites();
     updateNav();
     saveState();
-    scrollTo({top:0,behavior:options.instant?"auto":"smooth"});
+    if(view==="read"||view==="fqih")hideResume();
+    const reveal=()=>{
+      document.body.classList.remove("view-transitioning");
+      $$(".view").forEach(node=>{node.classList.toggle("active",node===target);node.classList.remove("view-forward","view-back","view-exit-left","view-exit-right")});
+      if(target){void target.offsetWidth;target.classList.add(direction)}
+      if(view==="read"){
+        if(options.library!==undefined)libraryOpen=options.library;
+        state.libraryOpen=libraryOpen;
+        $("#view-read").classList.toggle("library-open",libraryOpen);
+        renderSurahList($("#surahSearch").value);
+        if(!libraryOpen)renderSurah();
+      }
+      if(view==="favorites")renderFavorites();
+      scrollTo({top:0,behavior:options.instant?"auto":"smooth"});
+    };
+    clearTimeout(viewTransitionTimer);
+    if(previous!==view&&!options.instant&&previousNode?.classList.contains("active")){
+      document.body.classList.add("view-transitioning");
+      previousNode.classList.add(direction==="view-forward"?"view-exit-left":"view-exit-right");
+      viewTransitionTimer=setTimeout(reveal,230);
+    }else reveal();
   }
 
   function updateNav(){
@@ -88,7 +101,7 @@
   function renderSurahList(query=""){
     const needle=normalize(query);
     const matches=DATA.filter(item=>!needle||normalize(`${item.number} ${item.nameLatin} ${item.nameArabic}`).includes(needle));
-    $("#surahList").innerHTML=matches.length?matches.map(item=>`<button class="surah-item${item.number===state.current?" active":""}" data-surah="${item.number}"><span>${String(item.number).padStart(3,"0")}</span><strong>${escapeHtml(item.nameLatin)}</strong><b lang="ar" dir="rtl">${escapeHtml(item.nameArabic)}</b></button>`).join(""):`<p class="empty-favorites">${t("searchEmpty")}</p>`;
+    $("#surahList").innerHTML=matches.length?matches.map((item,index)=>`<button class="surah-item${item.number===state.current?" active":""}" style="--index:${index}" data-surah="${item.number}"><span>${String(item.number).padStart(3,"0")}</span><strong>${escapeHtml(item.nameLatin)}</strong><b lang="ar" dir="rtl">${escapeHtml(item.nameArabic)}</b></button>`).join(""):`<p class="empty-favorites">${t("searchEmpty")}</p>`;
     $$('[data-surah]').forEach(button=>button.addEventListener("click",()=>openSurah(Number(button.dataset.surah))));
   }
 
@@ -159,7 +172,7 @@
 
   function renderFavorites(){
     $("#readCount").textContent=String(state.read.length); $("#favoriteCount").textContent=String(state.favorites.length);
-    $("#favoriteGrid").innerHTML=state.favorites.length?state.favorites.map(number=>{const item=DATA[number-1];return `<button class="favorite-card" data-favorite-surah="${number}"><span>${String(number).padStart(3,"0")}</span><strong>${escapeHtml(item.nameLatin)}</strong><b lang="ar" dir="rtl">${escapeHtml(item.nameArabic)}</b></button>`}).join(""):`<div class="empty-favorites">${t("noFavorites")}</div>`;
+    $("#favoriteGrid").innerHTML=state.favorites.length?state.favorites.map((number,index)=>{const item=DATA[number-1];return `<button class="favorite-card" style="--index:${index}" data-favorite-surah="${number}"><span>${String(number).padStart(3,"0")}</span><strong>${escapeHtml(item.nameLatin)}</strong><b lang="ar" dir="rtl">${escapeHtml(item.nameArabic)}</b></button>`}).join(""):`<div class="empty-favorites">${t("noFavorites")}</div>`;
     $$('[data-favorite-surah]').forEach(button=>button.addEventListener("click",()=>openSurah(Number(button.dataset.favoriteSurah))));
   }
 
@@ -254,7 +267,8 @@
     $("#onboardingBack").style.visibility=onboardingStep?"visible":"hidden";$("#onboardingNext span").textContent=onboardingStep===2?t("start"):t("next");
   }
 
-  function showResume(){if(!state.onboarded||!state.current)return;$("#resumeName").textContent=DATA[state.current-1]?.nameLatin||"";$("#resumeToast").hidden=false;}
+  function showResume(){if(!state.onboarded||!state.current||currentView==="read"||currentView==="fqih")return;const toast=$("#resumeToast");$("#resumeName").textContent=DATA[state.current-1]?.nameLatin||"";toast.classList.remove("closing");toast.hidden=false;}
+  function hideResume(){const toast=$("#resumeToast");if(!toast||toast.hidden)return;toast.classList.add("closing");clearTimeout(resumeTimer);resumeTimer=setTimeout(()=>{toast.hidden=true;toast.classList.remove("closing")},260)}
 
   function syncSharedState(){try{const value=window.NurAndroid?.getState?.();if(value)state={...state,...JSON.parse(value)};currentView=state.currentView==="assistant"?"fqih":state.currentView||currentView;libraryOpen=state.libraryOpen!==false;document.documentElement.dataset.theme=state.theme;updateThemeIcons();applyLanguage();showView(currentView,{instant:true,library:libraryOpen});if(currentView==="read"&&!libraryOpen&&state.currentVerse>1)setTimeout(()=>document.querySelector(`#verse-${state.currentVerse}`)?.scrollIntoView({block:"center"}),260)}catch{}}
 
@@ -271,7 +285,7 @@
     $("#focusButton").onclick=()=>{closeSettings();showView("read",{library:false});document.body.classList.add("focus-mode")};$("#focusExit").onclick=()=>document.body.classList.remove("focus-mode");$("#imageButton").onclick=createSurahImage;$("#downloadAudio").onclick=downloadCurrentAudio;
     $("#resetData").onclick=()=>{if(confirm(t("resetConfirm"))){localStorage.removeItem(STORAGE_KEY);try{window.NurAndroid?.clearState?.();window.NurAndroid?.deleteAllAudio()}catch{}state={...DEFAULTS};saveState();closeSettings();applyLanguage();openOnboarding();showToast(t("resetDone"));}};
     $("#onboardingBack").onclick=()=>{onboardingStep=Math.max(0,onboardingStep-1);renderOnboarding()};$("#onboardingNext").onclick=()=>{if(onboardingStep<2){onboardingStep++;renderOnboarding()}else{state.onboarded=true;saveState();$("#onboarding").hidden=true;document.body.classList.remove("modal-open");showView("home")}};
-    $("#resumeButton").onclick=()=>{$("#resumeToast").hidden=true;openSurah(state.current)};$("#dismissResume").onclick=()=>$("#resumeToast").hidden=true;
+    $("#resumeButton").onclick=()=>{hideResume();openSurah(state.current)};$("#dismissResume").onclick=hideResume;
     $("#mediaToggle").onclick=()=>audio.paused?audio.play():audio.pause();$("#mediaClose").onclick=()=>{audio.pause();$("#mediaPlayer").hidden=true};
     audio.onplay=()=>$("#mediaToggle img").src="icons/pause.png";audio.onpause=()=>$("#mediaToggle img").src="icons/play.png";audio.ontimeupdate=()=>$("#mediaProgress").value=audio.duration?audio.currentTime/audio.duration*100:0;audio.onended=()=>{audioIndex++;if(audioIndex<audioQueue.length)startAudio(audioQueue[audioIndex]);else $("#mediaPlayer").hidden=true};audio.onerror=()=>showToast(t("audioUnavailable"));
     document.addEventListener("click",event=>{const control=event.target.closest?.("button,a[href],select,input");if(!control||control.disabled)return;haptic(control.matches(".reset-data")?"warning":control.matches(".primary,.online-action,.mark-read,.download-audio-button")?"medium":"selection")},true);
