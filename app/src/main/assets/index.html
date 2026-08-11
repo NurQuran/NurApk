@@ -13,7 +13,7 @@
   <header class="desktop-header">
     <button class="brand" data-view="home" aria-label="Accueil"><img src="nur-logo.png" alt=""><span>Nūr</span></button>
     <nav><button data-view="home" data-i18n="home">Accueil</button><button data-view="read" data-i18n="read">Lire</button><button data-fqih>Fqih</button><button data-view="favorites" data-i18n="favorites">Favoris</button></nav>
-    <div class="header-actions"><button class="round-button" data-theme aria-label="Changer le thème"><i class="theme-icon"></i></button><button class="round-button settings-button" data-settings aria-label="Paramètres"><i class="settings-icon"></i></button></div>
+    <div class="header-actions"><button class="round-button" data-theme aria-label="Changer le thème"><img class="ui-icon" data-theme-icon src="icons/sun.png" alt=""></button><button class="round-button settings-button" data-settings aria-label="Paramètres"><img class="ui-icon" src="icons/settings.png" alt=""></button></div>
   </header>
 
   <main>
@@ -38,7 +38,7 @@
     <section id="view-read" class="view read-view">
       <aside class="surah-panel" id="surahPanel">
         <div class="panel-title"><small data-i18n="offlineLibrary">BIBLIOTHÈQUE HORS LIGNE</small><h2 data-i18n="chooseSurah">Choisir une sourate</h2></div>
-        <label class="search-box"><i></i><input id="surahSearch" type="search" autocomplete="off" data-i18n-placeholder="searchSurah" placeholder="Rechercher une sourate"></label>
+        <label class="search-box"><img class="ui-icon" src="icons/search.png" alt=""><input id="surahSearch" type="search" autocomplete="off" data-i18n-placeholder="searchSurah" placeholder="Rechercher une sourate"></label>
         <div id="surahList" class="surah-list"></div>
       </aside>
       <article class="reading-area" id="readingArea">
@@ -54,7 +54,7 @@
           <button id="nextSurah" aria-label="Sourate suivante">→</button>
         </header>
         <div id="basmala" class="basmala" lang="ar" dir="rtl">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
-        <div class="surah-actions"><button class="online-action" id="playSurah">▶ <span data-i18n="listenOnline">Écouter en ligne</span></button><button class="explain-action" data-fqih>Fqih · <span data-i18n="explainOnline">Expliquer en ligne</span></button></div>
+        <div class="surah-actions"><button class="online-action" id="playSurah"><img class="ui-icon" src="icons/play.png" alt=""><span data-i18n="listenOnline">Écouter en ligne</span></button><button class="explain-action" data-fqih>Fqih · <span data-i18n="explainOnline">Expliquer en ligne</span></button></div>
         <div id="verseStack" class="verse-stack"></div>
         <div class="surah-closing"><span></span><p lang="ar" dir="rtl">صَدَقَ ٱللَّهُ ٱلْعَظِيمُ</p><small>Sadaqa-llāhu l-ʿaẓīm</small></div>
         <button id="markRead" class="mark-read" data-i18n="markRead">✓ Marquer cette sourate comme lue</button>
@@ -78,8 +78,8 @@
     <button data-view="read"><i class="book-icon"></i><span data-i18n="read">Lire</span></button>
     <button data-view="fqih"><i class="fqih-icon">F</i><span>Fqih</span></button>
     <button data-view="favorites"><i class="heart-icon">♡</i><span data-i18n="favorites">Favoris</span></button>
-    <button data-theme aria-label="Changer le thème"><i class="theme-icon"></i></button>
-    <button data-settings aria-label="Paramètres"><i class="settings-icon"></i></button>
+    <button data-theme aria-label="Changer le thème"><img class="ui-icon" data-theme-icon src="icons/sun.png" alt=""></button>
+    <button data-settings aria-label="Paramètres"><img class="ui-icon" src="icons/settings.png" alt=""></button>
   </nav>
 
   <div id="settingsLayer" class="modal-layer" hidden>
@@ -90,6 +90,7 @@
         <article class="setting-card"><span class="setting-number">02</span><div><h3 data-i18n="recitation">Lecture</h3><p data-i18n="recitationText">Choisissez le muṣḥaf affiché hors ligne.</p><div class="choice-row" id="riwayahChoices"><button data-riwayah="hafs">Ḥafṣ</button><button data-riwayah="warsh">Warsh</button></div></div></article>
         <article class="setting-card"><span class="setting-number">03</span><div><h3 data-i18n="display">Affichage</h3><div class="switch-list"><label><span data-i18n="tajweedColors">Couleurs de tajwīd</span><input id="tajweedToggle" type="checkbox"></label><label><span data-i18n="pronunciation">Prononciation</span><input id="pronunciationToggle" type="checkbox"></label><label><span data-i18n="frenchTranslation">Traduction française</span><input id="frenchToggle" type="checkbox"></label><label><span data-i18n="englishTranslation">Traduction anglaise</span><input id="englishToggle" type="checkbox"></label></div><label class="font-range"><span data-i18n="arabicSize">Taille du texte arabe</span><input id="fontSize" type="range" min="28" max="58" step="2"></label></div></article>
         <article class="setting-card"><span class="setting-number">04</span><div><h3 data-i18n="studyMode">Mémorisation</h3><p data-i18n="studyText">Masquez temporairement l’arabe pour vous exercer.</p><label class="single-switch"><span data-i18n="hideArabic">Masquer le texte arabe</span><input id="memoryToggle" type="checkbox"></label><div class="study-actions"><button id="focusButton" data-i18n="focus">Mode concentration</button><button id="imageButton" data-i18n="createImage">Créer une image de la sourate</button></div></div></article>
+        <article class="setting-card audio-download-card"><span class="setting-number"><img class="ui-icon" src="icons/download.png" alt=""></span><div><h3 data-i18n="offlineAudio">Audio hors ligne</h3><p data-i18n="offlineAudioText">Enregistrez l’audio de la sourate actuelle sur ce téléphone.</p><button id="downloadAudio" class="download-audio-button"><img class="ui-icon" src="icons/download.png" alt=""><span data-i18n="downloadCurrentAudio">Télécharger l’audio de cette sourate</span></button><small id="audioDownloadStatus" class="audio-download-status"></small></div></article>
         <article class="setting-card offline-card"><span class="setting-number">✓</span><div><h3 data-i18n="offlineInstalled">Contenu hors ligne installé</h3><p id="offlineSummary"></p></div></article>
         <button id="resetData" class="reset-data" data-i18n="resetData">Effacer les favoris, la progression et les réglages</button>
       </div>
@@ -100,10 +101,10 @@
     <section class="onboarding-card"><div class="onboarding-progress"><i></i><i></i><i></i></div><div id="onboardingContent"></div><div class="onboarding-actions"><button id="onboardingBack">←</button><button id="onboardingNext"><span></span> →</button></div></section>
   </div>
 
-  <div id="resumeToast" class="resume-toast" hidden><div><small data-i18n="continueReading">CONTINUER LA LECTURE</small><strong id="resumeName"></strong></div><button id="resumeButton" data-i18n="resume">Reprendre</button><button id="dismissResume" aria-label="Fermer">×</button></div>
+  <div id="resumeToast" class="resume-toast" hidden><div><small data-i18n="continueReading">CONTINUER LA LECTURE</small><strong id="resumeName"></strong></div><button id="resumeButton" data-i18n="resume">Reprendre</button><button id="dismissResume" aria-label="Fermer"><img class="ui-icon" src="icons/close.png" alt=""></button></div>
   <div id="toast" class="toast" role="status" hidden></div>
   <button id="focusExit" class="focus-exit" aria-label="Quitter le mode concentration">×</button>
-  <div id="mediaPlayer" class="media-player" hidden><button id="mediaToggle">Ⅱ</button><div><small data-i18n="onlineAudio">AUDIO EN LIGNE</small><strong id="mediaTitle"></strong><progress id="mediaProgress" max="100" value="0"></progress></div><button id="mediaClose">×</button></div>
+  <div id="mediaPlayer" class="media-player" hidden><button id="mediaToggle"><img class="ui-icon" src="icons/pause.png" alt=""></button><div><small data-i18n="onlineAudio">AUDIO EN LIGNE</small><strong id="mediaTitle"></strong><progress id="mediaProgress" max="100" value="0"></progress></div><button id="mediaClose"><img class="ui-icon" src="icons/close.png" alt=""></button></div>
   <audio id="audio"></audio>
 
   <script src="data/quran-data.js"></script>

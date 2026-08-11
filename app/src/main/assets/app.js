@@ -23,6 +23,10 @@
     ar:{home:"الرئيسية",read:"القراءة",favorites:"المفضلة",heroTitle:"القرآن،<br><em>معك دائمًا.</em>",heroLead:"اقرأ بروايتي حفص وورش، وابحث واحفظ واطّلع على الترجمات دون اتصال.",chooseSurah:"اختر سورة",offlineReady:"القراءة متاحة بالكامل دون اتصال",featureRead:"حفص وورش",featureReadText:"السور الـ114 وبياناتها مدمجة في التطبيق.",featureStudy:"التعلّم",featureStudyText:"النطق والترجمات وألوان التجويد متاحة في كل مكان.",featureKeep:"المتابعة",featureKeepText:"تبقى المفضلة والتقدم والتفضيلات على هاتفك.",aboutLabel:"حول التطبيق",aboutTitle:"نور يرافقك.",aboutText:"أنشأ أنس اليوبي تطبيق نُور في سن الرابعة عشرة كصدقة جارية. تُحفظ النصوص محليًا لتبقى متاحة في كل وقت.",offlineLibrary:"المكتبة دون اتصال",searchSurah:"ابحث عن سورة",allSurahs:"كل السور",storedLocally:"النصوص محفوظة على هذا الجهاز",goToVerse:"الانتقال إلى آية",addFavorite:"إضافة إلى المفضلة",removeFavorite:"إزالة من المفضلة",listenOnline:"الاستماع عبر الإنترنت",explainOnline:"الشرح عبر الإنترنت",markRead:"✓ تحديد السورة كمقروءة",markedRead:"✓ تم تحديد السورة كمقروءة",yourSpace:"مساحتك",favoritesLead:"تُحفظ سورك وتقدمك على هذا الجهاز فقط.",personalProgress:"التقدم الشخصي",yourJourney:"مسيرتك",surahs:"سورة",onlineOnly:"الاتصال مطلوب",fqihOnlineText:"يستخدم فقيه ذكاءً اصطناعيًا عبر الإنترنت. وتبقى قراءة القرآن متاحة بالكامل دون اتصال.",openFqih:"فتح فقيه عبر الإنترنت",readingPreferences:"تفضيلات القراءة",settings:"الإعدادات",language:"اللغة",languageText:"اختر لغة الواجهة كاملة.",recitation:"القراءة",recitationText:"اختر المصحف المتاح دون اتصال.",display:"العرض",tajweedColors:"ألوان التجويد",pronunciation:"النطق",frenchTranslation:"الترجمة الفرنسية",englishTranslation:"الترجمة الإنجليزية",arabicSize:"حجم النص العربي",studyMode:"الحفظ",studyText:"أخفِ النص العربي مؤقتًا للتدرّب.",hideArabic:"إخفاء النص العربي",offlineInstalled:"تم تثبيت المحتوى دون اتصال",resetData:"مسح المفضلة والتقدم والإعدادات",continueReading:"متابعة القراءة",resume:"متابعة",onlineAudio:"الصوت عبر الإنترنت",chapter:"سورة",verses:"آيات",meccan:"مكية",medinan:"مدنية",noFavorites:"لا توجد سورة مفضلة بعد.",offlineSummary:"114 سورة · حفص وورش · الفرنسية · الإنجليزية · النطق · التجويد",audioNeedsInternet:"الصوت متاح فقط عند الاتصال بالإنترنت.",fqihNeedsInternet:"فقيه متاح فقط عند الاتصال بالإنترنت.",audioUnavailable:"هذا الصوت غير متاح مؤقتًا.",searchEmpty:"لا توجد سورة مطابقة لهذا البحث.",resetConfirm:"هل تريد مسح جميع بيانات نُور الشخصية؟",resetDone:"تم مسح البيانات الشخصية.",favoriteAdded:"تمت إضافة السورة إلى المفضلة.",favoriteRemoved:"تمت إزالة السورة من المفضلة.",progressSaved:"تم حفظ التقدم.",versePrompt:"رقم الآية",invalidVerse:"رقم الآية غير موجود.",focus:"وضع التركيز",createImage:"إنشاء صورة للسورة",imageShared:"تم إنشاء صورة السورة.",imageFailed:"تعذر مشاركة الصورة على هذا الجهاز.",welcome:"مرحبًا",welcomeText:"اختر لغتك. يمكنك تغيير كل شيء لاحقًا.",offlineWelcome:"كل شيء جاهز دون اتصال",offlineWelcomeText:"النصوص والترجمات والإعدادات والحركات موجودة داخل التطبيق.",start:"ابدأ",next:"التالي"}
   };
 
+  Object.assign(copy.fr,{offlineAudio:"Audio hors ligne",offlineAudioText:"Enregistrez l’audio de la sourate actuelle sur ce téléphone.",downloadCurrentAudio:"Télécharger l’audio de cette sourate",audioSaved:"Audio disponible hors ligne",audioDownloading:"Téléchargement audio",audioDownloadFailed:"Le téléchargement audio a été interrompu."});
+  Object.assign(copy.en,{offlineAudio:"Offline audio",offlineAudioText:"Save the current surah audio on this phone.",downloadCurrentAudio:"Download this surah audio",audioSaved:"Audio available offline",audioDownloading:"Downloading audio",audioDownloadFailed:"The audio download was interrupted."});
+  Object.assign(copy.ar,{offlineAudio:"الصوت دون اتصال",offlineAudioText:"احفظ صوت السورة الحالية على هذا الهاتف.",downloadCurrentAudio:"تنزيل صوت هذه السورة",audioSaved:"الصوت متاح دون اتصال",audioDownloading:"جارٍ تنزيل الصوت",audioDownloadFailed:"توقف تنزيل الصوت."});
+
   function loadState(){
     try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") }; }
     catch { return { ...DEFAULTS }; }
@@ -93,7 +97,7 @@
       const translations=[];
       if(state.french) translations.push(`<div class="translation"><small>FRANÇAIS</small><p>${escapeHtml(verse.fr)}</p></div>`);
       if(state.english) translations.push(`<div class="translation"><small>ENGLISH</small><p>${escapeHtml(verse.en)}</p></div>`);
-      return `<article class="verse-card" id="verse-${verse.n}" style="--index:${index}"><div class="verse-meta"><span>${item.number}:${verse.n}</span><button data-play-verse="${index}" aria-label="${escapeHtml(t("listenOnline"))}">▶</button></div><p class="arabic-text" lang="ar" dir="rtl" style="font-size:${state.fontSize}px">${arabic}</p>${state.pronunciation?`<p class="pronunciation">${escapeHtml(verse.pronunciation)}</p>`:""}${translations.length?`<div class="translations">${translations.join("")}</div>`:""}</article>`;
+      return `<article class="verse-card" id="verse-${verse.n}" style="--index:${index}"><div class="verse-meta"><span>${item.number}:${verse.n}</span><button data-play-verse="${index}" aria-label="${escapeHtml(t("listenOnline"))}"><img class="ui-icon" src="icons/play.png" alt=""></button></div><p class="arabic-text" lang="ar" dir="rtl" style="font-size:${state.fontSize}px">${arabic}</p>${state.pronunciation?`<p class="pronunciation">${escapeHtml(verse.pronunciation)}</p>`:""}${translations.length?`<div class="translations">${translations.join("")}</div>`:""}</article>`;
     }).join("");
     document.body.classList.toggle("memory-mode",state.memory);
     $$('[data-play-verse]').forEach(button=>button.addEventListener("click",()=>playVerse(Number(button.dataset.playVerse))));
@@ -120,21 +124,34 @@
 
   function openFqih(){ if(!navigator.onLine){showToast(t("fqihNeedsInternet"));return;} location.href=FQIH_URL; }
 
-  function audioUrl(global){ return `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${global}.mp3`; }
+  function audioDescriptor(index=0){
+    if(state.riwayah==="warsh")return{key:`warsh-${state.current}`,url:`https://server16.mp3quran.net/H-Lharraz/Rewayat-Warsh-A-n-Nafi/${String(state.current).padStart(3,"0")}.mp3`,verse:0};
+    const item=verses()[index];return item?.global?{key:`hafs-${item.global}`,url:`https://cdn.islamic.network/quran/audio/128/ar.alafasy/${item.global}.mp3`,verse:item.n}:null;
+  }
+  function hasNativeAudio(key){try{return!!window.NurAndroid?.hasAudio(key)}catch{return false}}
+  function playableSource(descriptor){if(hasNativeAudio(descriptor.key))return`https://offline.nur/audio/${descriptor.key}.mp3`;return navigator.onLine?descriptor.url:""}
   function playVerse(index){
-    if(!navigator.onLine){showToast(t("audioNeedsInternet"));return;}
-    const item=verses()[index]; if(!item?.global){showToast(t("audioUnavailable"));return;}
+    if(state.riwayah==="warsh"){playSurah();return;}
+    const descriptor=audioDescriptor(index);if(!descriptor){showToast(t("audioUnavailable"));return;}if(!playableSource(descriptor)){showToast(t("audioNeedsInternet"));return;}
     audioQueue=[index];audioIndex=0;startAudio(index);
   }
   function playSurah(){
-    if(!navigator.onLine){showToast(t("audioNeedsInternet"));return;}
-    audioQueue=verses().map((_,index)=>index);audioIndex=0;startAudio(0);
+    const descriptor=audioDescriptor(0);if(!descriptor||!playableSource(descriptor)){showToast(t("audioNeedsInternet"));return;}
+    audioQueue=state.riwayah==="warsh"?[0]:verses().map((_,index)=>index);audioIndex=0;startAudio(0);
   }
   function startAudio(index){
-    const item=verses()[index]; if(!item?.global)return;
-    audio.src=audioUrl(item.global); audio.play().catch(()=>showToast(t("audioUnavailable")));
-    $("#mediaPlayer").hidden=false; $("#mediaTitle").textContent=`${surah().nameLatin} · ${item.n}`;
-    $$(".verse-card").forEach(node=>node.classList.remove("playing")); const card=$(`#verse-${item.n}`);card?.classList.add("playing");card?.scrollIntoView({behavior:"smooth",block:"center"});
+    const descriptor=audioDescriptor(index),item=verses()[index];if(!descriptor||!item)return;const source=playableSource(descriptor);if(!source){showToast(t("audioNeedsInternet"));return;}
+    audio.src=source;audio.play().catch(()=>showToast(t("audioUnavailable")));
+    $("#mediaPlayer").hidden=false;$("#mediaTitle").textContent=state.riwayah==="warsh"?`${surah().nameLatin} · Warsh`:`${surah().nameLatin} · ${item.n}`;
+    $$(".verse-card").forEach(node=>node.classList.remove("playing"));const card=$(`#verse-${item.n}`);card?.classList.add("playing");card?.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+  function currentAudioPack(){return state.riwayah==="warsh"?[audioDescriptor(0)].filter(Boolean):verses().map((_,index)=>audioDescriptor(index)).filter(Boolean)}
+  function refreshAudioDownloadStatus(){const items=currentAudioPack(),saved=items.filter(item=>hasNativeAudio(item.key)).length;$("#audioDownloadStatus").textContent=saved===items.length&&items.length?t("audioSaved"):saved?`${saved}/${items.length}`:""}
+  async function downloadCurrentAudio(){
+    const items=currentAudioPack();if(!items.length)return;if(items.every(item=>hasNativeAudio(item.key))){$("#audioDownloadStatus").textContent=t("audioSaved");return}if(!navigator.onLine){showToast(t("audioNeedsInternet"));return}
+    $("#audioDownloadStatus").textContent=`${t("audioDownloading")} · 0/${items.length}`;
+    if(window.NurAndroid?.downloadAudioPack){window.NurAndroid.downloadAudioPack(state.current,JSON.stringify(items));return}
+    try{const cache=await caches.open("nur-audio-v1");for(let index=0;index<items.length;index++){const response=await fetch(items[index].url);if(!response.ok)throw new Error("download");await cache.put(items[index].url,response);$("#audioDownloadStatus").textContent=`${t("audioDownloading")} · ${index+1}/${items.length}`}$("#audioDownloadStatus").textContent=t("audioSaved")}catch{$("#audioDownloadStatus").textContent=t("audioDownloadFailed")}
   }
 
   function openSettings(){ $("#settingsLayer").hidden=false;document.body.classList.add("modal-open");updateSettings(); }
@@ -142,11 +159,12 @@
   function updateSettings(){
     $$('[data-language]').forEach(button=>button.classList.toggle("active",button.dataset.language===state.language));
     $$('[data-riwayah]').forEach(button=>button.classList.toggle("active",button.dataset.riwayah===state.riwayah));
-    $("#tajweedToggle").checked=state.tajweed; $("#pronunciationToggle").checked=state.pronunciation; $("#frenchToggle").checked=state.french; $("#englishToggle").checked=state.english; $("#fontSize").value=String(state.fontSize); $("#memoryToggle").checked=state.memory;
+    $("#tajweedToggle").checked=state.tajweed; $("#pronunciationToggle").checked=state.pronunciation; $("#frenchToggle").checked=state.french; $("#englishToggle").checked=state.english; $("#fontSize").value=String(state.fontSize); $("#memoryToggle").checked=state.memory;refreshAudioDownloadStatus();
   }
   function setOption(key,value){state[key]=value;saveState();renderSurah();updateSettings();}
 
-  function toggleTheme(){ state.theme=state.theme==="dark"?"light":"dark";document.documentElement.dataset.theme=state.theme;saveState(); }
+  function updateThemeIcons(){$$('[data-theme-icon]').forEach(icon=>icon.src=state.theme==="dark"?"icons/sun.png":"icons/moon.png")}
+  function toggleTheme(event){event?.stopPropagation();state.theme=state.theme==="dark"?"light":"dark";document.documentElement.dataset.theme=state.theme;updateThemeIcons();saveState();}
 
   function goToVerse(){
     const value=prompt(t("versePrompt"),"1"); if(value===null)return; const number=Number(value), target=$(`#verse-${number}`); if(!target){showToast(t("invalidVerse"));return;}target.scrollIntoView({behavior:"smooth",block:"center"});
@@ -183,19 +201,19 @@
     $("#closeSettings").onclick=closeSettings;$("#settingsLayer").onclick=event=>{if(event.target.id==="settingsLayer")closeSettings()};
     $$('[data-language]').forEach(button=>button.onclick=()=>{state.language=button.dataset.language;saveState();applyLanguage()});$$('[data-riwayah]').forEach(button=>button.onclick=()=>setOption("riwayah",button.dataset.riwayah));
     $("#tajweedToggle").onchange=event=>setOption("tajweed",event.target.checked);$("#pronunciationToggle").onchange=event=>setOption("pronunciation",event.target.checked);$("#frenchToggle").onchange=event=>setOption("french",event.target.checked);$("#englishToggle").onchange=event=>setOption("english",event.target.checked);$("#fontSize").oninput=event=>setOption("fontSize",Number(event.target.value));$("#memoryToggle").onchange=event=>setOption("memory",event.target.checked);
-    $("#focusButton").onclick=()=>{closeSettings();showView("read",{library:false});document.body.classList.add("focus-mode")};$("#focusExit").onclick=()=>document.body.classList.remove("focus-mode");$("#imageButton").onclick=createSurahImage;
-    $("#resetData").onclick=()=>{if(confirm(t("resetConfirm"))){localStorage.removeItem(STORAGE_KEY);state={...DEFAULTS};closeSettings();applyLanguage();openOnboarding();showToast(t("resetDone"));}};
+    $("#focusButton").onclick=()=>{closeSettings();showView("read",{library:false});document.body.classList.add("focus-mode")};$("#focusExit").onclick=()=>document.body.classList.remove("focus-mode");$("#imageButton").onclick=createSurahImage;$("#downloadAudio").onclick=downloadCurrentAudio;
+    $("#resetData").onclick=()=>{if(confirm(t("resetConfirm"))){localStorage.removeItem(STORAGE_KEY);try{window.NurAndroid?.deleteAllAudio()}catch{}state={...DEFAULTS};closeSettings();applyLanguage();openOnboarding();showToast(t("resetDone"));}};
     $("#onboardingBack").onclick=()=>{onboardingStep=Math.max(0,onboardingStep-1);renderOnboarding()};$("#onboardingNext").onclick=()=>{if(onboardingStep<2){onboardingStep++;renderOnboarding()}else{state.onboarded=true;saveState();$("#onboarding").hidden=true;document.body.classList.remove("modal-open");showView("home")}};
     $("#resumeButton").onclick=()=>{$("#resumeToast").hidden=true;openSurah(state.current)};$("#dismissResume").onclick=()=>$("#resumeToast").hidden=true;
     $("#mediaToggle").onclick=()=>audio.paused?audio.play():audio.pause();$("#mediaClose").onclick=()=>{audio.pause();$("#mediaPlayer").hidden=true};
-    audio.onplay=()=>$("#mediaToggle").textContent="Ⅱ";audio.onpause=()=>$("#mediaToggle").textContent="▶";audio.ontimeupdate=()=>$("#mediaProgress").value=audio.duration?audio.currentTime/audio.duration*100:0;audio.onended=()=>{audioIndex++;if(audioIndex<audioQueue.length)startAudio(audioQueue[audioIndex]);else $("#mediaPlayer").hidden=true};audio.onerror=()=>showToast(t("audioUnavailable"));
+    audio.onplay=()=>$("#mediaToggle img").src="icons/pause.png";audio.onpause=()=>$("#mediaToggle img").src="icons/play.png";audio.ontimeupdate=()=>$("#mediaProgress").value=audio.duration?audio.currentTime/audio.duration*100:0;audio.onended=()=>{audioIndex++;if(audioIndex<audioQueue.length)startAudio(audioQueue[audioIndex]);else $("#mediaPlayer").hidden=true};audio.onerror=()=>showToast(t("audioUnavailable"));
     addEventListener("offline",()=>showToast(t("audioNeedsInternet")));
   }
 
   function init(){
     if(DATA.length!==114){document.body.innerHTML=`<div class="empty-favorites">Offline Quran data is incomplete.</div>`;return;}
-    document.documentElement.dataset.theme=state.theme;bind();applyLanguage();showView("home",{instant:true});setTimeout(()=>$("#splash").classList.add("hide"),650);setTimeout(()=>{if(!state.onboarded)openOnboarding();else showResume()},1050);
-    window.NurOffline={createSurahImage,enterFocus:()=>document.body.classList.toggle("focus-mode"),meta:META};
+    document.documentElement.dataset.theme=state.theme;bind();updateThemeIcons();applyLanguage();showView("home",{instant:true});setTimeout(()=>$("#splash").classList.add("hide"),650);setTimeout(()=>{if(!state.onboarded)openOnboarding();else showResume()},1050);
+    window.NurOffline={createSurahImage,enterFocus:()=>document.body.classList.toggle("focus-mode"),meta:META,onAudioDownloadProgress:(surahNumber,done,total,finished,failed)=>{if(surahNumber!==state.current)return;const status=$("#audioDownloadStatus");status.textContent=failed?t("audioDownloadFailed"):finished?t("audioSaved"):`${t("audioDownloading")} · ${done}/${total}`;if(finished&&!failed)showToast(t("audioSaved"))}};
   }
   init();
 })();

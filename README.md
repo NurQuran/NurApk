@@ -8,9 +8,10 @@ Cette version embarque directement l’interface et la bibliothèque coranique. 
 - le texte arabe, la prononciation et les traductions française et anglaise ;
 - les couleurs de tajwīd pour la lecture Ḥafṣ ;
 - la recherche, les favoris, la progression, la mémorisation et le mode concentration ;
-- les thèmes clair/sombre, les trois langues de l’interface et toutes les animations.
+- les thèmes clair/sombre, les trois langues de l’interface et toutes les animations ;
+- les sourates audio déjà enregistrées depuis les paramètres.
 
-L’audio et Fqih restent volontairement en ligne. L’application l’indique clairement lorsqu’aucune connexion n’est disponible.
+Fqih reste volontairement en ligne. L’audio peut être écouté en ligne ou enregistré, sourate par sourate, pour les prochaines lectures hors connexion.
 
 ## Sources des textes
 
