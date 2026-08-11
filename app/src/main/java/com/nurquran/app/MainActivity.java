@@ -178,6 +178,20 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void openOnline() {
+            runOnUiThread(() -> {
+                int surah = 1;
+                int verse = 1;
+                try {
+                    JSONObject state = new JSONObject(preferences.getString("state", "{}"));
+                    surah = Math.max(1, Math.min(114, state.optInt("current", 1)));
+                    verse = Math.max(1, state.optInt("currentVerse", 1));
+                } catch (Exception ignored) { }
+                webView.loadUrl("https://nur.youbianas1.workers.dev/read?surah=" + surah + "&source=android#verse-" + verse);
+            });
+        }
+
+        @JavascriptInterface
         public boolean hasAudio(String key) {
             File file = audioFile(key);
             return file.isFile() && file.length() > 1024;

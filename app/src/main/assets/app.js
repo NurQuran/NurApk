@@ -14,6 +14,8 @@
   let audioIndex = -1;
   let onboardingStep = 0;
   let lastThemeToggle = 0;
+  let readingObserver = null;
+  let positionSaveTimer = 0;
 
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
@@ -82,7 +84,21 @@
   }
 
   function openSurah(number){
-    state.current=Math.max(1,Math.min(114,number)); saveState(); libraryOpen=false; showView("read",{library:false});
+    state.current=Math.max(1,Math.min(114,number)); state.currentVerse=1; saveState(); libraryOpen=false; showView("read",{library:false});
+  }
+
+  function observeReadingPosition(){
+    readingObserver?.disconnect();
+    readingObserver=new IntersectionObserver(entries=>{
+      const visible=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>Math.abs(a.boundingClientRect.top-innerHeight*.45)-Math.abs(b.boundingClientRect.top-innerHeight*.45))[0];
+      if(!visible)return;
+      const verse=Number(visible.target.id.replace("verse-",""));
+      if(!verse||verse===state.currentVerse)return;
+      state.currentVerse=verse;
+      clearTimeout(positionSaveTimer);
+      positionSaveTimer=setTimeout(saveState,180);
+    },{rootMargin:"-34% 0px -48% 0px",threshold:.01});
+    $$(".verse-card").forEach(card=>readingObserver.observe(card));
   }
 
   function renderSurah(){
@@ -106,6 +122,7 @@
     }).join("");
     document.body.classList.toggle("memory-mode",state.memory);
     $$('[data-play-verse]').forEach(button=>button.addEventListener("click",()=>playVerse(Number(button.dataset.playVerse))));
+    observeReadingPosition();
     renderSurahList($("#surahSearch").value);
   }
 
@@ -175,7 +192,7 @@
   function toggleTheme(event){event?.preventDefault();event?.stopPropagation();event?.stopImmediatePropagation?.();const now=Date.now();if(now-lastThemeToggle<450)return;lastThemeToggle=now;applyTheme(document.documentElement.dataset.theme==="light"?"dark":"light")}
 
   function goToVerse(){
-    const value=prompt(t("versePrompt"),"1"); if(value===null)return; const number=Number(value), target=$(`#verse-${number}`); if(!target){showToast(t("invalidVerse"));return;}target.scrollIntoView({behavior:"smooth",block:"center"});
+    const value=prompt(t("versePrompt"),"1"); if(value===null)return; const number=Number(value), target=$(`#verse-${number}`); if(!target){showToast(t("invalidVerse"));return;}state.currentVerse=number;saveState();target.scrollIntoView({behavior:"smooth",block:"center"});
   }
 
   async function createSurahImage(){
@@ -223,6 +240,7 @@
     audio.onplay=()=>$("#mediaToggle img").src="icons/pause.png";audio.onpause=()=>$("#mediaToggle img").src="icons/play.png";audio.ontimeupdate=()=>$("#mediaProgress").value=audio.duration?audio.currentTime/audio.duration*100:0;audio.onended=()=>{audioIndex++;if(audioIndex<audioQueue.length)startAudio(audioQueue[audioIndex]);else $("#mediaPlayer").hidden=true};audio.onerror=()=>showToast(t("audioUnavailable"));
     document.addEventListener("click",event=>{const control=event.target.closest?.("button,a[href],select,input");if(!control||control.disabled)return;haptic(control.matches(".reset-data")?"warning":control.matches(".primary,.online-action,.mark-read,.download-audio-button")?"medium":"selection")},true);
     addEventListener("offline",()=>showToast(t("offlineNotice")));
+    addEventListener("online",()=>{saveState();showToast(t("onlineAudio"));setTimeout(()=>window.NurAndroid?.openOnline?.(),500)});
   }
 
   function init(){
