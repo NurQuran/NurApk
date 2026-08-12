@@ -1,6 +1,6 @@
 # Nūr pour Android — édition hors ligne
 
-Cette version embarque directement l’interface et la bibliothèque coranique. Elle démarre sans Wi‑Fi, y compris lors du premier lancement.
+Cette version embarque directement l’interface et la bibliothèque coranique. Elle démarre sans Wi‑Fi, y compris lors du premier lancement, et conserve désormais la même application locale même lorsque la connexion revient.
 
 ## Disponible hors ligne
 
@@ -9,9 +9,11 @@ Cette version embarque directement l’interface et la bibliothèque coranique. 
 - les couleurs de tajwīd pour la lecture Ḥafṣ ;
 - la recherche, les favoris, la progression, la mémorisation et le mode concentration ;
 - les thèmes clair/sombre, les trois langues de l’interface et toutes les animations ;
-- les sourates audio déjà enregistrées depuis les paramètres.
+- les favoris, la progression, les préférences et la dernière position, conservés localement.
 
-Fqih reste volontairement en ligne. L’audio peut être écouté en ligne ou enregistré, sourate par sourate, pour les prochaines lectures hors connexion.
+Seuls Fqih et l’audio utilisent Internet. L’audio n’est pas inclus dans l’APK, mais il peut toujours être enregistré facultativement, sourate par sourate, depuis les paramètres.
+
+La connexion ou la déconnexion ne remplace plus l’interface locale par le site web : la page, la sourate et le verset en cours restent en place.
 
 ## Sources des textes
 

@@ -7,14 +7,9 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.GradientDrawable;
-import android.net.ConnectivityManager;
-import android.net.NetworkCapabilities;
-import android.net.Network;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
@@ -50,7 +45,7 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
     private static final String HOME_URL = "file:///android_asset/index.html";
-    private static final String ONLINE_HOME_URL = "https://nur.youbianas1.workers.dev/?source=android";
+    private static final String FQIH_URL = "https://nur.youbianas1.workers.dev/assistant?source=android";
     private static final String APP_HOST = "nur.youbianas1.workers.dev";
     private static final String OFFLINE_AUDIO_HOST = "offline.nur";
     private final ExecutorService downloads = Executors.newSingleThreadExecutor();
@@ -59,8 +54,6 @@ public class MainActivity extends Activity {
     private LinearLayout nativeNav;
     private final TextView[] nativeSections = new TextView[4];
     private ImageButton nativeTheme;
-    private ConnectivityManager.NetworkCallback networkCallback;
-    private final Handler connectionHandler = new Handler(Looper.getMainLooper());
 
     @SuppressLint({"SetJavaScriptEnabled", "JavascriptInterface"})
     @Override
@@ -127,9 +120,9 @@ public class MainActivity extends Activity {
             }
         });
 
-        if (savedInstanceState == null) webView.loadUrl(isOnline() ? ONLINE_HOME_URL : HOME_URL);
-        else webView.restoreState(savedInstanceState);
-        registerConnectivityRecovery();
+        // The application shell and the verified Quran library always load from
+        // the APK. Network access is reserved for Fqih and audio requests only.
+        webView.loadUrl(HOME_URL);
     }
 
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
@@ -151,10 +144,10 @@ public class MainActivity extends Activity {
         bar.setBackground(rounded(Color.rgb(13, 31, 25), 42, Color.rgb(67, 72, 48)));
         String[] defaults = {"Accueil", "Lire", "Fqih", "Favoris"};
         String[] urls = {
-            "https://nur.youbianas1.workers.dev/?source=android",
-            "https://nur.youbianas1.workers.dev/read?source=android",
-            "https://nur.youbianas1.workers.dev/assistant?source=android",
-            "https://nur.youbianas1.workers.dev/favorites?source=android"
+            HOME_URL,
+            HOME_URL,
+            FQIH_URL,
+            HOME_URL
         };
         for (int index = 0; index < 4; index++) {
             TextView item = new TextView(this);
@@ -218,51 +211,6 @@ public class MainActivity extends Activity {
         try { nativeTheme.setImageBitmap(BitmapFactory.decodeStream(getAssets().open("light".equals(theme) ? "icons/moon.png" : "icons/sun.png"))); } catch (Exception ignored) { }
     }
 
-    private String onlineResumeUrl(boolean reconnected) {
-        int surah = 1;
-        int verse = 1;
-        String view = "home";
-        boolean library = true;
-        try {
-            JSONObject state = new JSONObject(preferences.getString("state", "{}"));
-            surah = Math.max(1, Math.min(114, state.optInt("current", 1)));
-            verse = Math.max(1, state.optInt("currentVerse", 1));
-            view = state.optString("currentView", "home");
-            library = state.optBoolean("libraryOpen", true);
-        } catch (Exception ignored) { }
-        String reconnect = reconnected ? "&reconnected=1" : "";
-        if ("favorites".equals(view)) return "https://nur.youbianas1.workers.dev/favorites?source=android" + reconnect;
-        if ("assistant".equals(view) || "fqih".equals(view)) return "https://nur.youbianas1.workers.dev/assistant?source=android" + reconnect;
-        if ("read".equals(view) && library) return "https://nur.youbianas1.workers.dev/read?source=android" + reconnect;
-        if ("read".equals(view)) return "https://nur.youbianas1.workers.dev/read?surah=" + surah + "&source=android" + reconnect + "#verse-" + verse;
-        return "https://nur.youbianas1.workers.dev/?source=android" + reconnect;
-    }
-
-    private void openOnlineAtSavedPosition(boolean reconnected) {
-        runOnUiThread(() -> webView.loadUrl(onlineResumeUrl(reconnected)));
-    }
-
-    private void registerConnectivityRecovery() {
-        ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        if (manager == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return;
-        networkCallback = new ConnectivityManager.NetworkCallback() {
-            @Override public void onAvailable(Network network) {
-                connectionHandler.postDelayed(() -> {
-                    String current = webView.getUrl();
-                    if (isOnline() && current != null && current.startsWith("file:///android_asset/")) openOnlineAtSavedPosition(true);
-                }, 700);
-            }
-        };
-        try { manager.registerDefaultNetworkCallback(networkCallback); } catch (Exception ignored) { }
-    }
-
-    private boolean isOnline() {
-        ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        if (manager == null || manager.getActiveNetwork() == null) return false;
-        NetworkCapabilities capabilities = manager.getNetworkCapabilities(manager.getActiveNetwork());
-        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-    }
-
     private void haptic(String kind) {
         runOnUiThread(() -> {
             int feedback = "warning".equals(kind) ? HapticFeedbackConstants.LONG_PRESS : "medium".equals(kind) ? HapticFeedbackConstants.CONTEXT_CLICK : HapticFeedbackConstants.CLOCK_TICK;
@@ -304,7 +252,7 @@ public class MainActivity extends Activity {
         public void setState(String stateJson) {
             if (stateJson != null && stateJson.length() <= 200000) {
                 preferences.edit().putString("state", stateJson).apply();
-                runOnUiThread(() -> updateNativeNavigation(webView.getUrl() == null ? ONLINE_HOME_URL : webView.getUrl()));
+                runOnUiThread(() -> updateNativeNavigation(webView.getUrl() == null ? HOME_URL : webView.getUrl()));
             }
         }
 
@@ -321,11 +269,6 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void openOffline() {
             runOnUiThread(() -> webView.loadUrl(HOME_URL));
-        }
-
-        @JavascriptInterface
-        public void openOnline() {
-            openOnlineAtSavedPosition(true);
         }
 
         @JavascriptInterface
@@ -393,10 +336,6 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        if (networkCallback != null) {
-            try { ((ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE)).unregisterNetworkCallback(networkCallback); } catch (Exception ignored) { }
-        }
-        connectionHandler.removeCallbacksAndMessages(null);
         downloads.shutdownNow();
         if (webView != null) webView.destroy();
         super.onDestroy();
