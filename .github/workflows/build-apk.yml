@@ -17,7 +17,7 @@ jobs:
           test -f app/src/main/assets/index.html
           test -f app/src/main/assets/data/quran-data.js
           node --check app/src/main/assets/app.js
-          grep -q "window.NUR_QURAN_DATA" app/src/main/assets/data/quran-data.js
+          node scripts/verify-local-package.mjs
 
       - name: Set up Java
         uses: actions/setup-java@v4

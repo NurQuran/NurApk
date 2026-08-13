@@ -109,3 +109,30 @@ html,body{width:100%;max-width:100%;overflow-x:clip}
 @keyframes offline-resume-mobile-in{from{opacity:0;transform:translate(-50%,20px) scale(.96);filter:blur(6px)}to{opacity:1;transform:translate(-50%,0);filter:none}}
 @keyframes offline-resume-mobile-out{to{opacity:0;transform:translate(-50%,18px) scale(.96);filter:blur(5px)}}
 @media(prefers-reduced-motion:reduce){.view.active.view-forward>*,.view.active.view-back>*,.view.active.view-exit-left>*,.view.active.view-exit-right>*,.surah-item,.favorite-card,.reading-area.surah-forward,.reading-area.surah-back,.toast,.toast.toast-leaving,.resume-toast,.resume-toast.closing,.audio-download-status:not(:empty){animation:none!important}}
+
+/* Unified local shell with online-only Fqih enhancements */
+html[data-network="offline"] .ai-online-only{display:none!important}
+.verse-actions{display:flex;align-items:center;gap:8px}
+.verse-meta .verse-explain-button{width:auto;height:40px;padding:0 15px;border-radius:999px;color:var(--gold);font:700 10px/1 var(--sans);letter-spacing:.02em;gap:7px}
+.verse-explain-button span{font-size:12px;transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.verse-explain-button:hover span{transform:rotate(14deg) scale(1.16)}
+.ai-online-only{animation:online-feature-in .52s cubic-bezier(.16,1,.3,1) both;transition:transform .3s cubic-bezier(.16,1,.3,1),border-color .3s,box-shadow .3s,background .3s}
+.explain-action:hover,.verse-explain-button:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--gold) 68%,var(--line));box-shadow:0 15px 38px color-mix(in srgb,var(--gold) 11%,transparent)}
+.online-action{position:relative;isolation:isolate;overflow:hidden}
+html[data-network="online"] .online-action:after{content:"";position:absolute;z-index:-1;inset:-55% auto -55% -35%;width:24%;transform:rotate(17deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:online-button-shine 4.8s ease-in-out 1.2s infinite}
+.verse-card{transition:transform .38s cubic-bezier(.16,1,.3,1),border-color .35s,box-shadow .35s}
+@media(hover:hover){.verse-card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--gold) 30%,var(--line));box-shadow:0 25px 78px rgba(0,0,0,.13)}}
+@keyframes online-feature-in{from{opacity:0;transform:translateY(10px) scale(.96);filter:blur(5px)}to{opacity:1;transform:none;filter:none}}
+@keyframes online-button-shine{0%,72%{left:-35%;opacity:0}78%{opacity:.8}90%,100%{left:120%;opacity:0}}
+
+@media(max-width:900px){
+  .reading-area{padding:max(42px,calc(env(safe-area-inset-top) + 14px)) 7px 138px!important}
+  .mobile-library-button{margin:0 0 6px!important}
+  .offline-mobile-chapter-nav{gap:8px;margin:0 0 8px}
+  .offline-mobile-reading-top{gap:7px;margin:0 0 10px;padding-bottom:10px}
+  .offline-verse-jump{gap:7px}
+  .verse-meta .verse-explain-button{height:39px;padding:0 13px;font-size:10px}
+  .surah-actions{gap:10px!important;margin-bottom:25px!important}
+}
+@media(max-width:390px){.reading-area{padding-top:max(40px,calc(env(safe-area-inset-top) + 12px))!important}.verse-meta .verse-explain-button{padding:0 10px}.verse-actions{gap:6px}}
+@media(prefers-reduced-motion:reduce){.ai-online-only,html[data-network="online"] .online-action:after{animation:none!important}.verse-card{transition:none!important}}

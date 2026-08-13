@@ -15,6 +15,8 @@ Seuls Fqih et l’audio utilisent Internet. L’audio n’est pas inclus dans l�
 
 La connexion ou la déconnexion ne remplace plus l’interface locale par le site web : la page, la sourate et le verset en cours restent en place.
 
+Lorsqu’Internet est disponible, les actions Fqih apparaissent à côté de la sourate et de chaque verset. Elles ouvrent l’assistant en ligne avec le passage local sélectionné. Ces actions disparaissent hors ligne sans modifier le reste de l’interface.
+
 ## Sources des textes
 
 - AlQuran Cloud : `quran-uthmani`, `quran-tajweed`, `fr.hamidullah`, `en.asad`, `en.transliteration` ;

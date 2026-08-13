@@ -5,17 +5,18 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.GradientDrawable;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.view.HapticFeedbackConstants;
-import android.view.Gravity;
-import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -24,10 +25,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -51,9 +48,9 @@ public class MainActivity extends Activity {
     private final ExecutorService downloads = Executors.newSingleThreadExecutor();
     private WebView webView;
     private SharedPreferences preferences;
-    private LinearLayout nativeNav;
-    private final TextView[] nativeSections = new TextView[4];
-    private ImageButton nativeTheme;
+    private volatile String pendingFqihAttachment;
+    private ConnectivityManager.NetworkCallback networkCallback;
+    private final Handler connectionHandler = new Handler(Looper.getMainLooper());
 
     @SuppressLint({"SetJavaScriptEnabled", "JavascriptInterface"})
     @Override
@@ -106,8 +103,14 @@ public class MainActivity extends Activity {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 if (url != null && url.startsWith("file:///android_asset/")) {
-                    if (nativeNav != null) nativeNav.setVisibility(View.GONE);
                     view.evaluateJavascript("window.NurOffline&&window.NurOffline.syncSharedState&&window.NurOffline.syncSharedState()", null);
+                } else if (url != null && url.startsWith(FQIH_URL) && pendingFqihAttachment != null && !url.contains("attached=1")) {
+                    String attachment = pendingFqihAttachment;
+                    pendingFqihAttachment = null;
+                    String target = FQIH_URL + "&auto=explain&attached=1";
+                    view.evaluateJavascript(
+                        "sessionStorage.setItem('nur-ai-attachment'," + JSONObject.quote(attachment) + ");" +
+                        "location.replace(" + JSONObject.quote(target) + ")", null);
                 }
             }
 
@@ -123,92 +126,28 @@ public class MainActivity extends Activity {
         // The application shell and the verified Quran library always load from
         // the APK. Network access is reserved for Fqih and audio requests only.
         webView.loadUrl(HOME_URL);
+        registerConnectivityMonitor();
     }
 
-    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
-
-    private GradientDrawable rounded(int color, int radius, Integer strokeColor) {
-        GradientDrawable shape = new GradientDrawable();
-        shape.setColor(color);
-        shape.setCornerRadius(dp(radius));
-        if (strokeColor != null) shape.setStroke(dp(1), strokeColor);
-        return shape;
-    }
-
-    private LinearLayout createNativeNavigation() {
-        LinearLayout bar = new LinearLayout(this);
-        bar.setOrientation(LinearLayout.HORIZONTAL);
-        bar.setGravity(Gravity.CENTER_VERTICAL);
-        bar.setPadding(dp(5), dp(5), dp(5), dp(5));
-        bar.setElevation(dp(18));
-        bar.setBackground(rounded(Color.rgb(13, 31, 25), 42, Color.rgb(67, 72, 48)));
-        String[] defaults = {"Accueil", "Lire", "Fqih", "Favoris"};
-        String[] urls = {
-            HOME_URL,
-            HOME_URL,
-            FQIH_URL,
-            HOME_URL
+    private void registerConnectivityMonitor() {
+        ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        if (manager == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return;
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override public void onLost(Network network) {
+                connectionHandler.postDelayed(() -> {
+                    String current = webView.getUrl();
+                    if (!isOnline() && current != null && current.startsWith(FQIH_URL)) webView.loadUrl(HOME_URL);
+                }, 650);
+            }
         };
-        for (int index = 0; index < 4; index++) {
-            TextView item = new TextView(this);
-            item.setText(defaults[index]);
-            item.setTextSize(11);
-            item.setGravity(Gravity.CENTER);
-            item.setTextColor(Color.rgb(167, 178, 172));
-            item.setTypeface(item.getTypeface(), android.graphics.Typeface.BOLD);
-            item.setBackground(rounded(Color.TRANSPARENT, 34, null));
-            final int destination = index;
-            item.setOnClickListener(view -> { haptic("selection"); webView.loadUrl(urls[destination]); });
-            bar.addView(item, new LinearLayout.LayoutParams(0, FrameLayout.LayoutParams.MATCH_PARENT, 1f));
-            nativeSections[index] = item;
-        }
-        ImageButton settings = nativeIconButton("icons/settings.png", "Paramètres");
-        settings.setOnClickListener(view -> { haptic("selection"); webView.evaluateJavascript("window.dispatchEvent(new Event('nur-native-settings'))", null); });
-        nativeTheme = nativeIconButton("icons/sun.png", "Mode clair ou sombre");
-        nativeTheme.setOnClickListener(view -> { haptic("selection"); webView.evaluateJavascript("window.dispatchEvent(new Event('nur-native-theme'))", null); });
-        LinearLayout.LayoutParams action = new LinearLayout.LayoutParams(dp(54), FrameLayout.LayoutParams.MATCH_PARENT);
-        action.setMargins(dp(3), 0, dp(3), 0);
-        bar.addView(settings, action);
-        LinearLayout.LayoutParams themeParams = new LinearLayout.LayoutParams(dp(54), FrameLayout.LayoutParams.MATCH_PARENT);
-        themeParams.setMargins(dp(3), 0, 0, 0);
-        bar.addView(nativeTheme, themeParams);
-        return bar;
+        try { manager.registerDefaultNetworkCallback(networkCallback); } catch (Exception ignored) { }
     }
 
-    private ImageButton nativeIconButton(String asset, String label) {
-        ImageButton button = new ImageButton(this);
-        button.setContentDescription(label);
-        button.setPadding(dp(15), dp(15), dp(15), dp(15));
-        button.setScaleType(android.widget.ImageView.ScaleType.CENTER_INSIDE);
-        button.setBackground(rounded(Color.rgb(12, 29, 24), 34, Color.rgb(42, 65, 55)));
-        try { button.setImageBitmap(BitmapFactory.decodeStream(getAssets().open(asset))); } catch (Exception ignored) { }
-        return button;
-    }
-
-    private void updateNativeNavigation(String url) {
-        if (nativeNav == null) return;
-        String language = "fr";
-        String theme = "dark";
-        try {
-            JSONObject state = new JSONObject(preferences.getString("state", "{}"));
-            language = state.optString("language", "fr");
-            theme = state.optString("theme", "dark");
-        } catch (Exception ignored) { }
-        String[][] labels = {
-            {"Accueil", "Lire", "Fqih", "Favoris"},
-            {"Home", "Read", "Fqih", "Favorites"},
-            {"الرئيسية", "القراءة", "فقيه", "المفضلة"}
-        };
-        int languageIndex = "ar".equals(language) ? 2 : "en".equals(language) ? 1 : 0;
-        int active = url.contains("/read") ? 1 : url.contains("/assistant") ? 2 : url.contains("/favorites") ? 3 : 0;
-        for (int index = 0; index < nativeSections.length; index++) {
-            nativeSections[index].setText(labels[languageIndex][index]);
-            boolean selected = index == active;
-            nativeSections[index].setTextColor(selected ? Color.rgb(12, 31, 24) : Color.rgb(167, 178, 172));
-            nativeSections[index].setBackground(rounded(selected ? Color.rgb(223, 191, 112) : Color.TRANSPARENT, 34, null));
-            nativeSections[index].animate().scaleX(selected ? 1f : .98f).scaleY(selected ? 1f : .98f).setDuration(260).start();
-        }
-        try { nativeTheme.setImageBitmap(BitmapFactory.decodeStream(getAssets().open("light".equals(theme) ? "icons/moon.png" : "icons/sun.png"))); } catch (Exception ignored) { }
+    private boolean isOnline() {
+        ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        if (manager == null || manager.getActiveNetwork() == null) return false;
+        NetworkCapabilities capabilities = manager.getNetworkCapabilities(manager.getActiveNetwork());
+        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
     }
 
     private void haptic(String kind) {
@@ -252,7 +191,6 @@ public class MainActivity extends Activity {
         public void setState(String stateJson) {
             if (stateJson != null && stateJson.length() <= 200000) {
                 preferences.edit().putString("state", stateJson).apply();
-                runOnUiThread(() -> updateNativeNavigation(webView.getUrl() == null ? HOME_URL : webView.getUrl()));
             }
         }
 
@@ -269,6 +207,13 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void openOffline() {
             runOnUiThread(() -> webView.loadUrl(HOME_URL));
+        }
+
+        @JavascriptInterface
+        public void openFqihWithAttachment(String attachmentJson) {
+            if (attachmentJson == null || attachmentJson.length() > 300000) return;
+            pendingFqihAttachment = attachmentJson;
+            runOnUiThread(() -> webView.loadUrl(FQIH_URL + "&auto=explain"));
         }
 
         @JavascriptInterface
@@ -336,6 +281,10 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (networkCallback != null) {
+            try { ((ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE)).unregisterNetworkCallback(networkCallback); } catch (Exception ignored) { }
+        }
+        connectionHandler.removeCallbacksAndMessages(null);
         downloads.shutdownNow();
         if (webView != null) webView.destroy();
         super.onDestroy();

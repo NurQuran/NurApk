@@ -27,14 +27,22 @@ for (const surah of data) {
   }
 }
 
-const [activity, app] = await Promise.all([
+const [activity, app, index, styles] = await Promise.all([
   readFile(resolve(root, "app/src/main/java/com/nurquran/app/MainActivity.java"), "utf8"),
   readFile(resolve(root, "app/src/main/assets/app.js"), "utf8"),
+  readFile(resolve(root, "app/src/main/assets/index.html"), "utf8"),
+  readFile(resolve(root, "app/src/main/assets/styles.css"), "utf8"),
 ]);
 
 if (!activity.includes("webView.loadUrl(HOME_URL);")) throw new Error("Android must start from the packaged application.");
 if (activity.includes("isOnline() ? ONLINE_HOME_URL : HOME_URL")) throw new Error("Android still switches shells according to connectivity.");
 if (app.includes("NurAndroid?.openOnline")) throw new Error("The local interface still redirects online after reconnecting.");
+if (!activity.includes("openFqihWithAttachment")) throw new Error("The local reader cannot hand an ayah to online Fqih.");
+if (activity.includes("createNativeNavigation")) throw new Error("The obsolete second Android navigation shell is still bundled.");
+if (!app.includes('dataset.network=navigator.onLine?"online":"offline"')) throw new Error("Online-only controls are not synchronized with connectivity.");
+if (!app.includes("data-explain-verse")) throw new Error("Online ayah explanations are missing.");
+if (!index.includes("ai-online-only") || !styles.includes('html[data-network="offline"] .ai-online-only')) throw new Error("Fqih actions are not hidden offline.");
+if (!styles.includes("env(safe-area-inset-top)")) throw new Error("The mobile reader does not respect the Android status bar safe area.");
 
 const hafsVerses = data.reduce((total, surah) => total + surah.hafs.length, 0);
 const warshVerses = data.reduce((total, surah) => total + surah.warsh.length, 0);
