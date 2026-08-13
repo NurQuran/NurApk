@@ -11,11 +11,13 @@ Cette version embarque directement l’interface et la bibliothèque coranique. 
 - les thèmes clair/sombre, les trois langues de l’interface et toutes les animations ;
 - les favoris, la progression, les préférences et la dernière position, conservés localement.
 
-Seuls Fqih et l’audio utilisent Internet. L’audio n’est pas inclus dans l’APK, mais il peut toujours être enregistré facultativement, sourate par sourate, depuis les paramètres.
+Seuls les réponses de Fqih et l’audio utilisent Internet. L’écran de discussion Fqih fait partie de l’APK : hors ligne, il affiche simplement le message de connexion requise et retrouve la discussion dès le retour du réseau. L’audio n’est pas inclus dans l’APK, mais il peut être enregistré facultativement en choisissant la sourate dans les paramètres.
 
 La connexion ou la déconnexion ne remplace plus l’interface locale par le site web : la page, la sourate et le verset en cours restent en place.
 
-Lorsqu’Internet est disponible, les actions Fqih apparaissent à côté de la sourate et de chaque verset. Elles ouvrent l’assistant en ligne avec le passage local sélectionné. Ces actions disparaissent hors ligne sans modifier le reste de l’interface.
+Lorsqu’Internet est disponible, les actions Fqih apparaissent à côté de la sourate et de chaque verset. Elles ouvrent le chat local avec le passage sélectionné ; seule la requête de réponse est envoyée au service Fqih. Ces actions disparaissent hors ligne sans modifier le reste de l’interface.
+
+La première ouverture permet de choisir la langue, la récitation, la voix, les couleurs, l’affichage de la prononciation, une traduction unique et le thème. Les mêmes choix restent modifiables dans les paramètres. En arabe, les listes et titres de sourates utilisent uniquement leurs noms arabes.
 
 ## Sources des textes
 

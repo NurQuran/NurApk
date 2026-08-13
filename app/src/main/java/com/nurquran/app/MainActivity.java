@@ -30,25 +30,28 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
     private static final String HOME_URL = "file:///android_asset/index.html";
-    private static final String FQIH_URL = "https://nur.youbianas1.workers.dev/assistant?source=android";
-    private static final String APP_HOST = "nur.youbianas1.workers.dev";
+    private static final String FQIH_API = "https://nur.youbianas1.workers.dev/api/ai-fiqh";
     private static final String OFFLINE_AUDIO_HOST = "offline.nur";
     private final ExecutorService downloads = Executors.newSingleThreadExecutor();
+    private final ExecutorService fqihRequests = Executors.newFixedThreadPool(2);
     private WebView webView;
     private SharedPreferences preferences;
-    private volatile String pendingFqihAttachment;
     private ConnectivityManager.NetworkCallback networkCallback;
     private final Handler connectionHandler = new Handler(Looper.getMainLooper());
 
@@ -80,7 +83,7 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
-                if ("file".equals(uri.getScheme()) || APP_HOST.equals(uri.getHost())) return false;
+                if ("file".equals(uri.getScheme())) return false;
                 startActivity(new Intent(Intent.ACTION_VIEW, uri));
                 return true;
             }
@@ -104,13 +107,6 @@ public class MainActivity extends Activity {
                 super.onPageFinished(view, url);
                 if (url != null && url.startsWith("file:///android_asset/")) {
                     view.evaluateJavascript("window.NurOffline&&window.NurOffline.syncSharedState&&window.NurOffline.syncSharedState()", null);
-                } else if (url != null && url.startsWith(FQIH_URL) && pendingFqihAttachment != null && !url.contains("attached=1")) {
-                    String attachment = pendingFqihAttachment;
-                    pendingFqihAttachment = null;
-                    String target = FQIH_URL + "&auto=explain&attached=1";
-                    view.evaluateJavascript(
-                        "sessionStorage.setItem('nur-ai-attachment'," + JSONObject.quote(attachment) + ");" +
-                        "location.replace(" + JSONObject.quote(target) + ")", null);
                 }
             }
 
@@ -133,11 +129,11 @@ public class MainActivity extends Activity {
         ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         if (manager == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return;
         networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override public void onAvailable(Network network) {
+                connectionHandler.postDelayed(() -> notifyConnectivity(true), 350);
+            }
             @Override public void onLost(Network network) {
-                connectionHandler.postDelayed(() -> {
-                    String current = webView.getUrl();
-                    if (!isOnline() && current != null && current.startsWith(FQIH_URL)) webView.loadUrl(HOME_URL);
-                }, 650);
+                connectionHandler.postDelayed(() -> notifyConnectivity(isOnline()), 500);
             }
         };
         try { manager.registerDefaultNetworkCallback(networkCallback); } catch (Exception ignored) { }
@@ -147,7 +143,14 @@ public class MainActivity extends Activity {
         ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         if (manager == null || manager.getActiveNetwork() == null) return false;
         NetworkCapabilities capabilities = manager.getNetworkCapabilities(manager.getActiveNetwork());
-        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        return capabilities != null
+            && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+    }
+
+    private void notifyConnectivity(boolean online) {
+        runOnUiThread(() -> webView.evaluateJavascript(
+            "window.NurOffline&&window.NurOffline.updateConnectivity(" + online + ")", null));
     }
 
     private void haptic(String kind) {
@@ -210,10 +213,14 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public void openFqihWithAttachment(String attachmentJson) {
-            if (attachmentJson == null || attachmentJson.length() > 300000) return;
-            pendingFqihAttachment = attachmentJson;
-            runOnUiThread(() -> webView.loadUrl(FQIH_URL + "&auto=explain"));
+        public boolean isOnline() {
+            return MainActivity.this.isOnline();
+        }
+
+        @JavascriptInterface
+        public void askFqih(String requestId, String requestJson) {
+            if (requestId == null || requestId.length() > 160 || requestJson == null || requestJson.length() > 300000) return;
+            fqihRequests.execute(() -> requestFqih(requestId, requestJson));
         }
 
         @JavascriptInterface
@@ -255,6 +262,60 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void requestFqih(String requestId, String requestJson) {
+        boolean success = false;
+        String language = "fr";
+        try { language = new JSONObject(requestJson).optString("language", "fr"); } catch (Exception ignored) { }
+        String fallback = "ar".equals(language) ? "تعذر على فقيه الرد. حاول مرة أخرى." : "en".equals(language) ? "Fqih could not answer. Please try again." : "Fqih n’a pas pu répondre. Réessayez.";
+        String message = fallback;
+        for (int attempt = 0; attempt < 2 && !success; attempt++) {
+            HttpURLConnection connection = null;
+            boolean transientFailure = true;
+            try {
+                connection = (HttpURLConnection) new URL(FQIH_API).openConnection();
+                connection.setRequestMethod("POST");
+                connection.setDoOutput(true);
+                connection.setConnectTimeout(20000);
+                connection.setReadTimeout(55000);
+                connection.setInstanceFollowRedirects(true);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                connection.setRequestProperty("User-Agent", "Nur-Android/4.0");
+                byte[] body = requestJson.getBytes(StandardCharsets.UTF_8);
+                connection.setFixedLengthStreamingMode(body.length);
+                try (OutputStream output = connection.getOutputStream()) { output.write(body); }
+                int status = connection.getResponseCode();
+                transientFailure = status == 429 || status == 500 || status == 502 || status == 503 || status == 504;
+                InputStream stream = status >= 200 && status < 300 ? connection.getInputStream() : connection.getErrorStream();
+                String raw = stream == null ? "" : readUtf8(stream);
+                JSONObject response = raw.isEmpty() ? new JSONObject() : new JSONObject(raw);
+                success = status >= 200 && status < 300 && !response.optString("answer", "").trim().isEmpty();
+                message = success ? response.optString("answer") : response.optString("error", fallback);
+            } catch (Exception ignored) {
+                message = fallback;
+            } finally {
+                if (connection != null) connection.disconnect();
+            }
+            if (!success && transientFailure && attempt == 0) {
+                try { Thread.sleep(850); } catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); break; }
+            } else if (!success) break;
+        }
+        final boolean result = success;
+        final String payload = message;
+        runOnUiThread(() -> webView.evaluateJavascript(
+            "window.NurOffline&&window.NurOffline.onFqihResponse(" + JSONObject.quote(requestId) + "," + result + "," + JSONObject.quote(payload) + ")", null));
+    }
+
+    private String readUtf8(InputStream input) throws Exception {
+        StringBuilder value = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
+            char[] buffer = new char[8192];
+            int count;
+            while ((count = reader.read(buffer)) != -1) value.append(buffer, 0, count);
+        }
+        return value.toString();
+    }
+
     private void download(String remoteUrl, File target) throws Exception {
         File temporary = new File(target.getParentFile(), target.getName() + ".part");
         HttpURLConnection connection = (HttpURLConnection) new URL(remoteUrl).openConnection();
@@ -286,6 +347,7 @@ public class MainActivity extends Activity {
         }
         connectionHandler.removeCallbacksAndMessages(null);
         downloads.shutdownNow();
+        fqihRequests.shutdownNow();
         if (webView != null) webView.destroy();
         super.onDestroy();
     }
