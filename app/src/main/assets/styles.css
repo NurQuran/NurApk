@@ -202,7 +202,7 @@ button[data-theme]:hover .theme-switch-glyph{filter:drop-shadow(0 0 8px color-mi
 @media(max-width:900px){.surah-actions{margin:20px 0 20px!important}.basmala{margin:20px 0 28px!important;padding-block:25px!important}.translations.two{grid-template-columns:1fr}}
 
 /* Tablet: the same animated dock and reading layout as the phone */
-@media (min-width:901px) and (max-width:1280px), (min-width:901px) and (hover:none) and (pointer:coarse){
+@media (min-width:901px) and (max-width:1280px) and (orientation:portrait){
   body{padding-bottom:112px}.desktop-header{display:none}.view{min-height:100svh}
   .read-view.active{display:block}.read-view:not(.library-open) .surah-panel,.read-view.library-open .reading-area{display:none}
   .surah-panel{position:relative;top:0;width:100%;height:calc(100svh - 96px);padding:30px 18px 0;border:0;background:var(--bg)}
@@ -235,3 +235,37 @@ button[data-theme]:hover .theme-switch-glyph{filter:drop-shadow(0 0 8px color-mi
   .favorites-view,.fqih-view{padding:50px 22px 145px}.favorite-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(prefers-reduced-motion:reduce){.theme-switch-glyph svg{transition:none}.mobile-nav{transition:none!important}}
+
+/* Offline discovery, study and personal-data controls */
+.verse-search-box{margin-top:9px;flex:0 0 auto}
+.verse-search-results:not([hidden]){display:block;min-height:0;overflow:auto;flex:1;margin-top:12px;padding:0 5px 28px;scrollbar-width:thin}
+.verse-search-count{margin:0 0 10px;color:var(--gold);font-size:10px}
+.verse-search-result{display:grid;gap:7px;width:100%;margin:0 0 8px;padding:16px;border:1px solid var(--line);border-radius:24px;background:var(--surface-2);text-align:start;transition:transform .26s,border-color .26s,background .26s}
+.verse-search-result:hover{transform:translateY(-2px);border-color:var(--gold);background:var(--gold-soft)}
+.verse-search-result span{color:var(--gold);font-size:11px}.verse-search-result b{color:var(--text);font:25px/1.8 "Traditional Arabic",serif;text-align:end}.verse-search-result small{color:var(--muted);font:12px/1.5 var(--serif)}
+.word-study{margin-top:20px;padding:14px;border:1px solid var(--line);border-radius:25px;background:var(--surface-2)}
+.word-study summary{cursor:pointer;color:var(--gold);font-size:11px;font-weight:750}.word-study>div{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+.word-chip{display:grid;gap:4px;min-width:110px;max-width:190px;padding:12px;border:1px solid var(--line);border-radius:19px;background:var(--surface);text-align:center}
+.word-chip strong{font:25px/1.5 "Traditional Arabic",serif}.word-chip span{color:var(--muted);font-size:11px}.word-chip small{color:var(--gold);font-size:10px}.word-study>p,.word-study-help{margin:10px 0 0!important;color:var(--muted);font-size:10px!important}
+.setting-card #exportBackup,.setting-card #importBackupButton{border-radius:999px;transition:transform .25s,border-color .25s}.setting-card #exportBackup:hover,.setting-card #importBackupButton:hover{transform:translateY(-2px);border-color:var(--gold)}
+.fqih-emblem{display:block;width:58px;height:58px;margin:auto;object-fit:contain}.fqih-hero .fqih-emblem{width:58px;height:58px;flex:0 0 58px;margin:0}.nav-fqih-icon{width:20px;height:20px;object-fit:contain}
+.empty-favorites button,.empty-favorites a{min-height:46px;margin-top:12px;padding:0 24px;border:1px solid var(--gold);border-radius:999px!important;background:var(--gold-soft);color:var(--gold);font-weight:750}.favorite-grid .empty-favorites{padding:34px 22px}.favorite-grid .empty-favorites p{margin:0}
+.surah-actions button{border-radius:999px!important}
+@media(max-width:900px){
+  .reading-area{padding-top:max(44px,calc(env(safe-area-inset-top) + 16px))!important}
+  .mobile-library-button{min-height:53px!important;margin-bottom:8px!important}
+  .offline-mobile-chapter-nav{gap:7px;margin-bottom:9px}.offline-mobile-chapter-nav button{min-height:48px;font-size:12px}
+  .offline-mobile-reading-top{gap:8px;margin-bottom:10px;padding-bottom:10px}.offline-verse-jump{grid-template-columns:43px minmax(0,1fr) 43px;gap:6px}
+  .offline-verse-jump>button,.offline-verse-jump label{min-height:48px}.offline-verse-jump label{padding:6px 9px}.offline-verse-jump select{padding:8px 5px;font-size:13px}
+  .mobile-favorite-button{min-height:48px}.surah-heading{padding-top:22px!important}.surah-actions button{min-height:56px!important}
+  .fqih-view{padding-top:calc(16px + env(safe-area-inset-top))}.fqih-hero{max-height:145px;padding-bottom:10px}.fqih-hero .fqih-emblem{width:43px;height:43px;flex-basis:43px}
+  .fqih-disclaimer{margin-bottom:7px;padding:9px 12px}.fqih-stream{min-height:calc(100svh - 230px);padding:10px 4px 105px}.fqih-welcome{align-self:center;max-width:90%;transform:translateY(-8vh)}
+  .favorite-grid{margin-top:10px}.favorite-grid .empty-favorites{padding:26px 17px}
+}
+@media (min-width:901px) and (max-width:1280px) and (orientation:portrait){
+  .reading-area{padding-top:max(48px,calc(env(safe-area-inset-top) + 18px))}
+  .mobile-library-button{min-height:53px;margin-bottom:8px}.offline-mobile-chapter-nav{gap:8px;margin-bottom:9px}.offline-mobile-chapter-nav button{min-height:50px}
+  .offline-mobile-reading-top{gap:8px;margin-bottom:10px;padding-bottom:10px}.offline-verse-jump>button,.offline-verse-jump label{min-height:50px}.mobile-favorite-button{min-height:49px}
+  .surah-actions button{border-radius:999px}.fqih-stream{min-height:calc(100svh - 245px)}.fqih-welcome{align-self:center;transform:translateY(-6vh)}
+}
+@media(prefers-reduced-motion:reduce){.verse-search-result,.setting-card #exportBackup,.setting-card #importBackupButton{transition:none!important}}

@@ -7,10 +7,15 @@ globalThis.window = {};
 const dataUrl = pathToFileURL(resolve(root, "app/src/main/assets/data/quran-data.js"));
 dataUrl.searchParams.set("verify", String(Date.now()));
 await import(dataUrl.href);
+const wordUrl = pathToFileURL(resolve(root, "app/src/main/assets/data/word-data.js"));
+wordUrl.searchParams.set("verify", String(Date.now()));
+await import(wordUrl.href);
 
 const data = window.NUR_QURAN_DATA;
 const meta = window.NUR_QURAN_META;
+const words = window.NUR_WORD_DATA;
 if (!Array.isArray(data) || data.length !== 114) throw new Error("The local Quran library must contain 114 surahs.");
+if (!words || Object.keys(words).length !== 114) throw new Error("The offline word-by-word library is incomplete.");
 
 for (const surah of data) {
   if (!Array.isArray(surah.hafs) || !surah.hafs.length) throw new Error(`Missing Hafs data for surah ${surah.number}.`);
@@ -19,6 +24,8 @@ for (const surah of data) {
     for (const field of ["arabic", "pronunciation", "fr", "en"]) {
       if (!verse[field]) throw new Error(`Missing ${field} in Hafs ${surah.number}:${verse.n}.`);
     }
+    const study = words[surah.number]?.[surah.number === 1 ? verse.n + 1 : verse.n];
+    if (!Array.isArray(study) || !study.length || study.some(word => !Array.isArray(word) || word.length !== 3 || word.some(part => !part))) throw new Error(`Missing word study for Hafs ${surah.number}:${verse.n}.`);
   }
   for (const verse of surah.warsh) {
     for (const field of ["arabic", "pronunciation", "fr", "en"]) {
@@ -53,6 +60,10 @@ if (!index.includes('class="theme-switch-glyph"') || !index.includes('class="med
 if (!styles.includes('(min-width:901px) and (max-width:1280px)') || !styles.includes('.mobile-nav.is-hidden')) throw new Error("The animated mobile navigation layout is missing on tablets.");
 if (!app.includes('state.language==="ar"?item.nameArabic:item.nameLatin')) throw new Error("Arabic mode still risks displaying Latin surah names.");
 if (!styles.includes("env(safe-area-inset-top)")) throw new Error("The mobile reader does not respect the Android status bar safe area.");
+if (!index.includes('id="verseSearch"') || !app.includes("renderVerseSearch")) throw new Error("Global offline verse search is missing.");
+if (!index.includes('id="wordStudyToggle"') || !app.includes("studyWords")) throw new Error("Hafs word study is missing.");
+if (!index.includes('id="exportBackup"') || !activity.includes("saveBackup") || !activity.includes("BACKUP_OPEN_REQUEST")) throw new Error("Local backup import/export is incomplete.");
+if (!app.includes("loadWarshTiming") || !app.includes("playWarshVerse") || !activity.includes("fetchWarshTiming")) throw new Error("Warsh verse-by-verse playback is missing.");
 
 for (const language of ["fr", "en"]) {
   const match = app.match(new RegExp(`${language}:(\\[[^\\n]+\\])`));

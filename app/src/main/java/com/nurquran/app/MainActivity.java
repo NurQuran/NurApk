@@ -24,6 +24,7 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.ValueCallback;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -48,10 +49,14 @@ public class MainActivity extends Activity {
     private static final String HOME_URL = "file:///android_asset/index.html";
     private static final String FQIH_API = "https://nur.youbianas1.workers.dev/api/ai-fiqh";
     private static final String OFFLINE_AUDIO_HOST = "offline.nur";
+    private static final int BACKUP_SAVE_REQUEST = 3041;
+    private static final int BACKUP_OPEN_REQUEST = 3042;
     private final ExecutorService downloads = Executors.newSingleThreadExecutor();
     private final ExecutorService fqihRequests = Executors.newFixedThreadPool(2);
     private WebView webView;
     private SharedPreferences preferences;
+    private String pendingBackup;
+    private ValueCallback<Uri[]> pendingFileChooser;
     private ConnectivityManager.NetworkCallback networkCallback;
     private final Handler connectionHandler = new Handler(Looper.getMainLooper());
 
@@ -73,12 +78,22 @@ public class MainActivity extends Activity {
         settings.setDatabaseEnabled(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setAllowFileAccess(true);
-        settings.setAllowContentAccess(false);
+        settings.setAllowContentAccess(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         webView.addJavascriptInterface(new OfflineBridge(), "NurAndroid");
-        webView.setWebChromeClient(new WebChromeClient());
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                if (pendingFileChooser != null) pendingFileChooser.onReceiveValue(null);
+                pendingFileChooser = callback;
+                Intent open = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                open.addCategory(Intent.CATEGORY_OPENABLE);
+                open.setType("application/json");
+                startActivityForResult(open, BACKUP_OPEN_REQUEST);
+                return true;
+            }
+        });
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -203,6 +218,20 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void saveBackup(String json) {
+            if (json == null || json.length() > 200000 || !json.contains("\"format\": \"nur-backup\"")) return;
+            runOnUiThread(() -> {
+                if (webView.getUrl() == null || !webView.getUrl().startsWith(HOME_URL)) return;
+                pendingBackup = json;
+                Intent save = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                save.addCategory(Intent.CATEGORY_OPENABLE);
+                save.setType("application/json");
+                save.putExtra(Intent.EXTRA_TITLE, "Nur-sauvegarde.json");
+                startActivityForResult(save, BACKUP_SAVE_REQUEST);
+            });
+        }
+
+        @JavascriptInterface
         public void performHaptic(String kind) {
             haptic(kind == null ? "selection" : kind);
         }
@@ -221,6 +250,13 @@ public class MainActivity extends Activity {
         public void askFqih(String requestId, String requestJson) {
             if (requestId == null || requestId.length() > 160 || requestJson == null || requestJson.length() > 300000) return;
             fqihRequests.execute(() -> requestFqih(requestId, requestJson));
+        }
+
+        @JavascriptInterface
+        public void fetchWarshTiming(String requestId, int readingId, int surahNumber) {
+            if (requestId == null || requestId.length() > 80 || surahNumber < 1 || surahNumber > 114) return;
+            if (readingId != 14 && readingId != 16 && readingId != 80 && readingId != 120) return;
+            fqihRequests.execute(() -> requestWarshTiming(requestId, readingId, surahNumber));
         }
 
         @JavascriptInterface
@@ -259,6 +295,27 @@ public class MainActivity extends Activity {
                 File[] files = audioDirectory().listFiles();
                 if (files != null) for (File file : files) file.delete();
             });
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == BACKUP_OPEN_REQUEST) {
+            if (pendingFileChooser != null) {
+                pendingFileChooser.onReceiveValue(resultCode == RESULT_OK && data != null && data.getData() != null ? new Uri[]{data.getData()} : null);
+                pendingFileChooser = null;
+            }
+        } else if (requestCode == BACKUP_SAVE_REQUEST) {
+            if (resultCode == RESULT_OK && data != null && data.getData() != null && pendingBackup != null) {
+                boolean saved = false;
+                try (OutputStream output = getContentResolver().openOutputStream(data.getData())) {
+                    if (output != null) { output.write(pendingBackup.getBytes(StandardCharsets.UTF_8)); saved = true; }
+                } catch (Exception ignored) { }
+                boolean result = saved;
+                webView.evaluateJavascript("window.NurOffline&&window.NurOffline.onBackupSaved(" + result + ")", null);
+            }
+            pendingBackup = null;
         }
     }
 
@@ -304,6 +361,28 @@ public class MainActivity extends Activity {
         final String payload = message;
         runOnUiThread(() -> webView.evaluateJavascript(
             "window.NurOffline&&window.NurOffline.onFqihResponse(" + JSONObject.quote(requestId) + "," + result + "," + JSONObject.quote(payload) + ")", null));
+    }
+
+    private void requestWarshTiming(String requestId, int readingId, int surahNumber) {
+        String payload = "null";
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL("https://mp3quran.net/api/v3/ayat_timing?surah=" + surahNumber + "&read=" + readingId);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(12000);
+            connection.setReadTimeout(18000);
+            connection.setRequestProperty("Accept", "application/json");
+            if (connection.getResponseCode() == 200) {
+                String response = readUtf8(connection.getInputStream());
+                if (response.length() < 500000 && response.startsWith("[")) payload = response;
+            }
+        } catch (Exception ignored) {
+        } finally {
+            if (connection != null) connection.disconnect();
+        }
+        String result = payload;
+        runOnUiThread(() -> webView.evaluateJavascript(
+            "window.NurOffline&&window.NurOffline.onWarshTiming(" + JSONObject.quote(requestId) + "," + JSONObject.quote(result) + ")", null));
     }
 
     private String readUtf8(InputStream input) throws Exception {

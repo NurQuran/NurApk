@@ -5,7 +5,7 @@
   const META = window.NUR_QURAN_META || {};
   const STORAGE_KEY = "nur-android-offline-v1";
   const FQIH_API = "https://nur.youbianas1.workers.dev/api/ai-fiqh";
-  const DEFAULTS = { language:"fr", theme:"dark", riwayah:"hafs", reciter:"ar.alafasy", tajweed:false, pronunciation:true, french:true, english:false, translationAuto:true, fontSize:40, memory:false, current:1, currentVerse:1, currentView:"home", libraryOpen:true, favorites:[], read:[], minutes:0, goal:10, onboarded:false };
+  const DEFAULTS = { language:"fr", theme:"dark", riwayah:"hafs", reciter:"ar.alafasy", tajweed:false, pronunciation:true, french:true, english:false, translationAuto:true, fontSize:40, memory:false, wordStudy:false, current:1, currentVerse:1, currentView:"home", libraryOpen:true, favorites:[], read:[], minutes:0, goal:10, onboarded:false };
   const SURAH_MEANINGS = {
     fr:["L’Ouverture","La Vache","La famille d’Imran","Les Femmes","La Table servie","Les Bestiaux","Les Murailles","Le Butin","Le Repentir","Jonas","Houd","Joseph","Le Tonnerre","Abraham","Al-Hijr","Les Abeilles","Le Voyage nocturne","La Caverne","Marie","Ta-Ha","Les Prophètes","Le Pèlerinage","Les Croyants","La Lumière","Le Discernement","Les Poètes","Les Fourmis","Le Récit","L’Araignée","Les Romains","Luqman","La Prosternation","Les Coalisés","Saba","Le Créateur","Ya-Sin","Les Rangés","Sad","Les Groupes","Le Pardonneur","Les Versets détaillés","La Consultation","L’Ornement","La Fumée","L’Agenouillée","Al-Ahqaf","Muhammad","La Victoire éclatante","Les Appartements","Qaf","Qui éparpillent","Le Mont","L’Étoile","La Lune","Le Tout Miséricordieux","L’Événement","Le Fer","La Discussion","L’Exode","L’Éprouvée","Le Rang","Le Vendredi","Les Hypocrites","La Grande Perte","Le Divorce","L’Interdiction","La Royauté","La Plume","Celle qui montre la vérité","Les Voies d’ascension","Noé","Les Djinns","L’Enveloppé","Le Revêtu d’un manteau","La Résurrection","L’Homme","Les Envoyés","La Nouvelle","Les Anges qui arrachent les âmes","Il s’est renfrogné","L’Obscurcissement","La Rupture","Les Fraudeurs","La Déchirure","Les Constellations","L’Astre nocturne","Le Très-Haut","L’Enveloppante","L’Aube","La Cité","Le Soleil","La Nuit","Le Jour montant","L’Ouverture","Le Figuier","L’Adhérence","La Destinée","La Preuve","La Secousse","Les Coursiers","Le Fracas","La Course aux richesses","Le Temps","Les Calomniateurs","L’Éléphant","Quraysh","L’Ustensile","L’Abondance","Les Infidèles","Les Secours","Les Fibres","Le Monothéisme pur","L’Aube naissante","Les Hommes"],
     en:["The Opening","The Cow","The Family of Imran","The Women","The Table Spread","The Cattle","The Heights","The Spoils of War","The Repentance","Jonah","Hud","Joseph","The Thunder","Abraham","The Rocky Tract","The Bee","The Night Journey","The Cave","Mary","Ta-Ha","The Prophets","The Pilgrimage","The Believers","The Light","The Criterion","The Poets","The Ant","The Stories","The Spider","The Romans","Luqman","The Prostration","The Combined Forces","Sheba","The Originator","Ya-Sin","Those Who Set the Ranks","Sad","The Groups","The Forgiver","Explained in Detail","The Consultation","The Ornaments of Gold","The Smoke","The Crouching","The Wind-Curved Sandhills","Muhammad","The Victory","The Rooms","Qaf","The Winnowing Winds","The Mount","The Star","The Moon","The Most Merciful","The Inevitable","The Iron","The Pleading Woman","The Exile","She That Is to Be Examined","The Ranks","The Congregation","The Hypocrites","The Mutual Disillusion","The Divorce","The Prohibition","The Sovereignty","The Pen","The Reality","The Ascending Stairways","Noah","The Jinn","The Enshrouded One","The Cloaked One","The Resurrection","Man","The Emissaries","The Tidings","Those Who Drag Forth","He Frowned","The Overthrowing","The Cleaving","The Defrauding","The Splitting Open","The Mansions of the Stars","The Nightcomer","The Most High","The Overwhelming","The Dawn","The City","The Sun","The Night","The Morning Hours","The Relief","The Fig","The Clot","The Power","The Clear Proof","The Earthquake","The Courser","The Calamity","The Rivalry in World Increase","The Declining Day","The Traducer","The Elephant","Quraysh","The Small Kindnesses","The Abundance","The Disbelievers","The Divine Support","The Palm Fiber","The Sincerity","The Daybreak","Mankind"]
@@ -28,6 +28,18 @@
   let fqihPendingAttachment = null;
   let fqihLoading = false;
   let fqihRequestId = 0;
+  const WARSH_VOICES = [
+    {id:"hicham-lharraz",name:"Hicham El Harraz",server:"https://server16.mp3quran.net/H-Lharraz/Rewayat-Warsh-A-n-Nafi/",timing:0},
+    {id:"koshi",name:"Al-Oyoun Al-Kouchi",server:"https://server11.mp3quran.net/koshi/",timing:16},
+    {id:"omar-qazabri",name:"Omar Al-Qazabri",server:"https://server9.mp3quran.net/omar_warsh/",timing:80},
+    {id:"husr-warsh",name:"Mahmoud Al-Hussary",server:"https://server13.mp3quran.net/husr/Rewayat-Warsh-A-n-Nafi/",timing:120},
+    {id:"yassin-warsh",name:"Yassin",server:"https://server11.mp3quran.net/qari/",timing:14}
+  ];
+  const timingCache = new Map();
+  const timingRequests = new Map();
+  let timingRequestId = 0;
+  let activeWarshTiming = null;
+  let warshStopAt = 0;
 
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
@@ -50,6 +62,19 @@
   Object.assign(copy.en,{heroTitle:"Every verse,<br><em>a moment to reflect.</em>",heroLead:"Read, listen and continue your journey through the Quran, with recitations, voices and translations designed around you.",featureRead:"Multiple reciters",featureReadText:"Choose from several renowned voices and tailor listening to the way you learn.",featureStudy:"Color-coded tajweed",featureStudyText:"Display pronunciation cues supplied by an identified edition.",featureKeep:"Your surahs",featureKeepText:"Favorite a complete surah and find it again on its own page.",aboutTitle:"A heartfelt ongoing charity",aboutText:"Nūr was imagined and created by Anas Youbi, aged 14, as a sadaqah jariyah: a free space that makes reading, listening to and understanding the Quran easier.",listenOnline:"Listen to the full surah",explainOnline:"Explain the surah",offlineReady:"or continue your reading",appearance:"Your atmosphere",appearanceLead:"Choose the theme that feels right for you.",dark:"Dark",light:"Light",voice:"Voice",colors:"Tajweed colors"});
   Object.assign(copy.ar,{heroTitle:"كل آية،<br><em>لحظة تدبّر.</em>",heroLead:"اقرأ واستمع وتابع رحلتك مع القرآن الكريم، بروايات وأصوات وترجمات ترافقك بهدوء.",featureRead:"قراء متعددون",featureReadText:"اختر من بين أصوات قراء معروفين واضبط الاستماع بما يناسب تعلمك.",featureStudy:"التجويد بالألوان",featureStudyText:"اعرض علامات النطق الملونة من نسخة محددة المصدر.",featureKeep:"سورك",featureKeepText:"أضف سورة كاملة إلى المفضلة وارجع إليها من صفحتها.",aboutTitle:"صدقة جارية صُنعت بمحبة",aboutText:"تخيّل أنس يوبي، البالغ من العمر 14 عامًا، تطبيق نُور وأنشأه صدقةً جارية: مساحة مجانية تُيسّر قراءة القرآن والاستماع إليه وفهمه.",listenOnline:"الاستماع إلى السورة كاملة",explainOnline:"شرح السورة",offlineReady:"أو تابع قراءتك",appearance:"أجواء القراءة",appearanceLead:"اختر المظهر الأنسب لك.",dark:"داكن",light:"فاتح",voice:"الصوت",colors:"ألوان التجويد"});
 
+  Object.assign(copy.fr,{searchVerses:"Rechercher dans les versets",noVerseResults:"Aucun verset trouvé.",wordStudy:"Lecture mot à mot (Ḥafṣ)",wordStudyHelp:"Arabe, prononciation et sens anglais de chaque mot, disponibles hors ligne.",wordStudyEnglish:"Sens des mots en anglais · Hablullah/data-quran",backupTitle:"Sauvegarde personnelle",backupHelp:"Exportez ou importez vos favoris, votre progression et vos préférences.",exportBackup:"Exporter",importBackup:"Importer",backupImported:"Sauvegarde importée.",backupInvalid:"Fichier de sauvegarde invalide.",backupSaved:"Sauvegarde prête à enregistrer."});
+  Object.assign(copy.en,{searchVerses:"Search Quran verses",noVerseResults:"No verses found.",wordStudy:"Word-by-word study (Hafs)",wordStudyHelp:"Arabic, pronunciation and English word glosses, available offline.",wordStudyEnglish:"English word glosses · Hablullah/data-quran",backupTitle:"Personal backup",backupHelp:"Export or import your favorites, progress and preferences.",exportBackup:"Export",importBackup:"Import",backupImported:"Backup imported.",backupInvalid:"Invalid backup file.",backupSaved:"Backup ready to save."});
+  Object.assign(copy.ar,{searchVerses:"ابحث في الآيات",noVerseResults:"لم يُعثر على آيات.",wordStudy:"القراءة كلمة بكلمة (حفص)",wordStudyHelp:"النص العربي والنطق ومعاني الكلمات بالإنجليزية دون اتصال.",wordStudyEnglish:"معاني الكلمات بالإنجليزية · Hablullah/data-quran",backupTitle:"نسخة احتياطية شخصية",backupHelp:"صدّر أو استورد المفضلة والتقدم والتفضيلات.",exportBackup:"تصدير",importBackup:"استيراد",backupImported:"تم استيراد النسخة الاحتياطية.",backupInvalid:"ملف النسخة الاحتياطية غير صالح.",backupSaved:"النسخة الاحتياطية جاهزة للحفظ."});
+  Object.assign(copy.fr,{warshVerseUnavailable:"Le minutage de ce récitant n’est pas disponible pour ce verset. Vous pouvez écouter la sourate entière."});
+  Object.assign(copy.en,{warshVerseUnavailable:"Verse timing is unavailable for this reciter. You can listen to the full surah."});
+  Object.assign(copy.ar,{warshVerseUnavailable:"توقيت هذه الآية غير متاح لهذا القارئ. يمكنك الاستماع إلى السورة كاملة."});
+  Object.assign(copy.fr,{featureStudy:"Fqih",featureStudyText:"Posez vos questions et explorez le sens des sourates quand vous êtes en ligne.",aboutText:"Nūr a été créé comme sadaqa jariya pour faciliter la lecture et la compréhension du Coran.",discoverSurahs:"Découvrir les sourates",warshTimed:"Écoute verset par verset disponible en ligne pour ce récitant, selon les minutages fournis.",warshUntimed:"Ce récitant est disponible uniquement pour la sourate entière."});
+  Object.assign(copy.en,{featureStudy:"Fqih",featureStudyText:"Ask questions and explore the meaning of surahs when you are online.",aboutText:"Nūr was created as a sadaqah jariyah to make reading and understanding the Quran easier.",discoverSurahs:"Discover surahs",warshTimed:"Verse-by-verse playback is available online for this reciter when timing data is provided.",warshUntimed:"This reciter is available for full-surah playback only."});
+  Object.assign(copy.ar,{featureStudy:"فقيه",featureStudyText:"اطرح أسئلتك واستكشف معاني السور عند الاتصال بالإنترنت.",aboutText:"أُنشئ نُور صدقةً جارية لتيسير قراءة القرآن وفهمه.",discoverSurahs:"اكتشف السور",warshTimed:"الاستماع آية بآية متاح عبر الإنترنت لهذا القارئ عند توفر بيانات التوقيت.",warshUntimed:"هذا القارئ متاح للاستماع إلى السورة كاملة فقط."});
+  Object.assign(copy.fr,{backupSaveFailed:"Impossible d’enregistrer la sauvegarde."});
+  Object.assign(copy.en,{backupSaveFailed:"Could not save the backup."});
+  Object.assign(copy.ar,{backupSaveFailed:"تعذر حفظ النسخة الاحتياطية."});
+
   function loadState(){
     try { const local=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");const native=window.NurAndroid?.getState?.();const persisted={...local,...(native?JSON.parse(native):{})};const merged={...DEFAULTS,...persisted};if(!Object.prototype.hasOwnProperty.call(persisted,"translationAuto"))merged.translationAuto=Object.keys(persisted).length===0;return merged; }
     catch { return { ...DEFAULTS }; }
@@ -57,7 +82,7 @@
   function saveState(){ const value=JSON.stringify(state);localStorage.setItem(STORAGE_KEY,value);try{window.NurAndroid?.setState?.(value)}catch{} }
   function t(key){ return copy[state.language]?.[key] || copy.fr[key] || key; }
   function escapeHtml(value=""){ return String(value).replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]); }
-  function normalize(value=""){ return value.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’'`´\-–—_]/g," ").replace(/[^a-zA-Z0-9\u0600-\u06ff ]/g,"").replace(/\s+/g," ").trim().toLowerCase(); }
+  function normalize(value=""){ return String(value).normalize("NFD").replace(/[\u0300-\u036f\u0640\u064B-\u065F\u0670\u06D6-\u06ED]/g,"").replace(/[ٱأإآ]/g,"ا").replace(/[’'`´\-–—_]/g," ").replace(/[^a-zA-Z0-9\u0600-\u06ff ]/g,"").replace(/\s+/g," ").trim().toLowerCase(); }
   function surah(){ return DATA[Math.max(0, Math.min(113, state.current - 1))]; }
   function verses(){ const item=surah(); return state.riwayah === "warsh" ? item.warsh : item.hafs; }
   function versesFor(number){const item=DATA[Math.max(0,Math.min(113,number-1))];return state.riwayah==="warsh"?item.warsh:item.hafs}
@@ -76,6 +101,7 @@
     $$('[data-i18n-placeholder]').forEach(node => node.placeholder=t(node.dataset.i18nPlaceholder));
     $("#offlineSummary").textContent=t("offlineSummary");
     renderSurahList($("#surahSearch").value);
+    renderVerseSearch($("#verseSearch").value);
     renderSurah(); renderFavorites(); renderFqih(); updateSettings(); updateNav();updateThemeIcons();
   }
 
@@ -125,8 +151,29 @@
     $$('[data-surah]').forEach(button=>button.addEventListener("click",()=>openSurah(Number(button.dataset.surah))));
   }
 
+  function renderVerseSearch(query=""){
+    const target=$("#verseSearchResults"),needle=normalize(query);
+    target.hidden=needle.length<2;$("#surahList").hidden=needle.length>=2;
+    if(needle.length<2){target.innerHTML="";return}
+    const matches=[];let count=0;
+    for(const chapter of DATA)for(const verse of chapter[state.riwayah])if([verse.arabic,verse.fr,verse.en,verse.pronunciation].some(value=>normalize(value).includes(needle))){count++;if(matches.length<60)matches.push({chapter,verse})}
+    target.innerHTML=matches.length?`<p class="verse-search-count">${count} ${t("verses")}</p>`+matches.map(({chapter,verse})=>`<button class="verse-search-result" data-result-surah="${chapter.number}" data-result-verse="${verse.n}"><span>${chapter.number}:${verse.n} · ${escapeHtml(surahDisplayName(chapter))}</span><b lang="ar" dir="rtl">${escapeHtml(verse.arabic)}</b><small>${escapeHtml(state.language==="en"?verse.en:verse.fr)}</small></button>`).join(""):`<p class="empty-favorites">${t("noVerseResults")}</p>`;
+    $$('[data-result-surah]').forEach(button=>button.addEventListener("click",()=>{openSurah(Number(button.dataset.resultSurah));setTimeout(()=>goToOfflineVerse(Number(button.dataset.resultVerse)),280)}));
+  }
+
+  function studyWords(chapter,verse){
+    if(state.riwayah!=="hafs"||!state.wordStudy)return "";
+    const words=window.NUR_WORD_DATA?.[chapter]?.[chapter===1?verse.n+1:verse.n];
+    if(!Array.isArray(words)||!words.length)return "";
+    const joined=normalize(words.map(word=>word?.[0]||"").join(" ")).replace(/ /g,"");
+    const text=normalize(verse.arabic).replace(/ /g,"");
+    if(joined!==text)return "";
+    return `<details class="word-study"><summary>${t("wordStudy")}</summary><div>${words.map(word=>`<div class="word-chip"><strong lang="ar" dir="rtl">${escapeHtml(word[0])}</strong><span>${escapeHtml(word[1])}</span><small>${escapeHtml(word[2])}</small></div>`).join("")}</div><p>${t("wordStudyEnglish")}</p></details>`;
+  }
+
   function openSurah(number){
     const direction=number<state.current?"surah-back":"surah-forward";
+    if(number!==state.current){audio.pause();activeWarshTiming=null;warshStopAt=0;$("#mediaPlayer").hidden=true}
     state.current=Math.max(1,Math.min(114,number)); state.currentVerse=1; saveState(); libraryOpen=false; showView("read",{library:false});
     const area=$("#view-read .reading-area");if(area){area.classList.remove("surah-forward","surah-back");void area.offsetWidth;area.classList.add(direction)}
   }
@@ -176,7 +223,7 @@
       if(state.french) translations.push(`<div class="translation"><small>FRANÇAIS</small><p>${escapeHtml(verse.fr)}</p></div>`);
       if(state.english) translations.push(`<div class="translation"><small>ENGLISH</small><p>${escapeHtml(verse.en)}</p></div>`);
       const explain=connectionAvailable()?`<button class="verse-explain-button ai-online-only" data-explain-verse="${verse.n}">${icon("sparkle")}${escapeHtml(t("explainVerse"))}</button>`:"";
-      return `<article class="verse-card" id="verse-${verse.n}" style="--index:${index}"><div class="verse-meta"><span>${item.number}:${verse.n}</span><div class="verse-actions">${explain}<button data-play-verse="${index}" aria-label="${escapeHtml(t("playVerse"))}">${icon("play")}</button></div></div><p class="arabic-text" lang="ar" dir="rtl" style="font-size:${state.fontSize}px">${arabic}</p>${state.pronunciation?`<p class="pronunciation">${escapeHtml(verse.pronunciation)}</p>`:""}${translations.length?`<div class="translations ${translations.length===2?"two":"one"}">${translations.join("")}</div>`:""}</article>`;
+      return `<article class="verse-card" id="verse-${verse.n}" style="--index:${index}"><div class="verse-meta"><span>${item.number}:${verse.n}</span><div class="verse-actions">${explain}<button data-play-verse="${index}" aria-label="${escapeHtml(t("playVerse"))}">${icon("play")}</button></div></div><p class="arabic-text" lang="ar" dir="rtl" style="font-size:${state.fontSize}px">${arabic}</p>${studyWords(item.number,verse)}${state.pronunciation?`<p class="pronunciation">${escapeHtml(verse.pronunciation)}</p>`:""}${translations.length?`<div class="translations ${translations.length===2?"two":"one"}">${translations.join("")}</div>`:""}</article>`;
     }).join("");
     document.body.classList.toggle("memory-mode",state.memory);
     $$('[data-play-verse]').forEach(button=>button.addEventListener("click",()=>playVerse(Number(button.dataset.playVerse))));
@@ -196,12 +243,30 @@
 
   function renderFavorites(){
     $("#readCount").textContent=String(state.read.length); $("#favoriteCount").textContent=String(state.favorites.length);
-    $("#favoriteGrid").innerHTML=state.favorites.length?state.favorites.map((number,index)=>{const item=DATA[number-1];return `<button class="favorite-card" style="--index:${index}" data-favorite-surah="${number}"><span>${String(number).padStart(3,"0")}</span><strong lang="${state.language==="ar"?"ar":"fr"}">${escapeHtml(surahDisplayName(item))}</strong>${state.language==="ar"?"":`<b lang="ar" dir="rtl">${escapeHtml(item.nameArabic)}</b>`}</button>`}).join(""):`<div class="empty-favorites">${t("noFavorites")}</div>`;
+    $("#favoriteGrid").innerHTML=state.favorites.length?state.favorites.map((number,index)=>{const item=DATA[number-1];return `<button class="favorite-card" style="--index:${index}" data-favorite-surah="${number}"><span>${String(number).padStart(3,"0")}</span><strong lang="${state.language==="ar"?"ar":"fr"}">${escapeHtml(surahDisplayName(item))}</strong>${state.language==="ar"?"":`<b lang="ar" dir="rtl">${escapeHtml(item.nameArabic)}</b>`}</button>`}).join(""):`<div class="empty-favorites"><p>${t("noFavorites")}</p><button id="discoverSurahs" type="button">${t("discoverSurahs")}</button></div>`;
     $$('[data-favorite-surah]').forEach(button=>button.addEventListener("click",()=>openSurah(Number(button.dataset.favoriteSurah))));
+    $("#discoverSurahs")?.addEventListener("click",()=>showView("read",{library:true}));
   }
 
   function showToast(message){
     const toast=$("#toast"); toast.textContent=message; toast.classList.remove("toast-leaving"); toast.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>{toast.classList.add("toast-leaving");toastTimer=setTimeout(()=>{toast.hidden=true;toast.classList.remove("toast-leaving")},280)},3200);
+  }
+  function exportBackup(){
+    const safe={language:state.language,theme:state.theme,riwayah:state.riwayah,reciter:state.reciter,tajweed:state.tajweed,pronunciation:state.pronunciation,french:state.french,english:state.english,translationAuto:state.translationAuto,fontSize:state.fontSize,memory:state.memory,wordStudy:state.wordStudy,current:state.current,currentVerse:state.currentVerse,favorites:state.favorites,read:state.read,minutes:state.minutes,goal:state.goal};
+    const json=JSON.stringify({format:"nur-backup",version:1,createdAt:new Date().toISOString(),state:safe},null,2);
+    if(window.NurAndroid?.saveBackup){window.NurAndroid.saveBackup(json);return}
+    const blob=new Blob([json],{type:"application/json"}),url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="Nur-sauvegarde.json";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+  async function importBackup(file){
+    try{
+      if(!file||file.size>200000)throw new Error("size");
+      const parsed=JSON.parse(await file.text());
+      if(parsed?.format!=="nur-backup"||parsed.version!==1||!parsed.state||typeof parsed.state!=="object")throw new Error("format");
+      const value=parsed.state,validNumbers=list=>Array.isArray(list)&&list.length<=114&&list.every(n=>Number.isInteger(n)&&n>=1&&n<=114);
+      if(!validNumbers(value.favorites)||!validNumbers(value.read)||!Number.isInteger(value.current)||value.current<1||value.current>114||!Number.isInteger(value.currentVerse)||value.currentVerse<1||value.currentVerse>286||!["fr","en","ar"].includes(value.language)||!["hafs","warsh"].includes(value.riwayah)||!["dark","light"].includes(value.theme))throw new Error("values");
+      state={...state,...Object.fromEntries(Object.entries(value).filter(([key])=>Object.hasOwn(DEFAULTS,key))),favorites:[...new Set(value.favorites)].sort((a,b)=>a-b),read:[...new Set(value.read)].sort((a,b)=>a-b),onboarded:true};
+      saveState();applyTheme(state.theme);applyLanguage();closeSettings();showView("favorites",{instant:true});showToast(t("backupImported"));
+    }catch{showToast(t("backupInvalid"))}
   }
   function haptic(kind="selection"){try{if(window.NurAndroid?.performHaptic){window.NurAndroid.performHaptic(kind);return}navigator.vibrate?.(kind==="warning"?[18,32,24]:kind==="medium"?18:8)}catch{}}
   function updateConnectivity(status,announce=true){
@@ -255,23 +320,65 @@
   }
 
   function audioDescriptor(index=0,surahNumber=state.current){
-    if(state.riwayah==="warsh")return{key:`warsh-${surahNumber}`,url:`https://server16.mp3quran.net/H-Lharraz/Rewayat-Warsh-A-n-Nafi/${String(surahNumber).padStart(3,"0")}.mp3`,verse:0};
+    if(state.riwayah==="warsh"){
+      const voice=WARSH_VOICES.find(item=>item.id===state.reciter)||WARSH_VOICES[0];
+      return{key:voice.id==="hicham-lharraz"?`warsh-${surahNumber}`:`warsh-${voice.id}-${surahNumber}`,url:`${voice.server}${String(surahNumber).padStart(3,"0")}.mp3`,verse:0};
+    }
     const item=versesFor(surahNumber)[index],reciter=state.reciter&&state.reciter.startsWith("ar.")?state.reciter:"ar.alafasy";return item?.global?{key:`hafs-${reciter.replace(/[^a-z0-9]/gi,"-")}-${item.global}`,url:`https://cdn.islamic.network/quran/audio/128/${reciter}/${item.global}.mp3`,verse:item.n}:null;
   }
   function hasNativeAudio(key){try{return!!window.NurAndroid?.hasAudio(key)}catch{return false}}
   function playableSource(descriptor){if(hasNativeAudio(descriptor.key))return`https://offline.nur/audio/${descriptor.key}.mp3`;return connectionAvailable()?descriptor.url:""}
   function playVerse(index){
-    if(state.riwayah==="warsh"){playSurah();return;}
+    if(state.riwayah==="warsh"){void playWarshVerse(index);return;}
     const descriptor=audioDescriptor(index);if(!descriptor){showToast(t("audioUnavailable"));return;}if(!playableSource(descriptor)){showToast(t("audioNeedsInternet"));return;}
     audioQueue=[index];audioIndex=0;startAudio(index);
   }
   function playSurah(){
     const descriptor=audioDescriptor(0);if(!descriptor||!playableSource(descriptor)){showToast(t("audioNeedsInternet"));return;}
+    activeWarshTiming=null;
     audioQueue=state.riwayah==="warsh"?[0]:verses().map((_,index)=>index);audioIndex=0;startAudio(0);
+    if(state.riwayah==="warsh")void loadWarshTiming();
+  }
+  function getWarshRows(readingId,surahNumber){
+    if(window.NurAndroid?.fetchWarshTiming){
+      return new Promise(resolve=>{
+        const id=`timing-${++timingRequestId}`;
+        const timer=setTimeout(()=>{timingRequests.delete(id);resolve(null)},30000);
+        timingRequests.set(id,payload=>{clearTimeout(timer);resolve(payload)});
+        try{window.NurAndroid.fetchWarshTiming(id,readingId,surahNumber)}catch{clearTimeout(timer);timingRequests.delete(id);resolve(null)}
+      });
+    }
+    return fetch(`https://mp3quran.net/api/v3/ayat_timing?surah=${surahNumber}&read=${readingId}`,{cache:"force-cache"}).then(response=>response.ok?response.json():null);
+  }
+  function onWarshTiming(id,payload){
+    const done=timingRequests.get(id);if(!done)return;timingRequests.delete(id);
+    try{done(JSON.parse(payload))}catch{done(null)}
+  }
+  async function loadWarshTiming(){
+    const voice=WARSH_VOICES.find(item=>item.id===state.reciter),surahNumber=state.current;
+    activeWarshTiming=null;
+    if(!voice?.timing||!connectionAvailable())return null;
+    const key=`${voice.timing}-${surahNumber}`;
+    if(timingCache.has(key)){activeWarshTiming=timingCache.get(key);return activeWarshTiming}
+    try{
+      const rows=await getWarshRows(voice.timing,surahNumber),expected=versesFor(surahNumber);
+      if(!Array.isArray(rows)||rows.length!==expected.length||!rows.every((row,index)=>Number(row.ayah)===expected[index].n&&Number(row.end_time)>Number(row.start_time)))throw new Error("timing mismatch");
+      const normalized=rows.map(row=>({start:Number(row.start_time)/1000,end:Number(row.end_time)/1000}));
+      timingCache.set(key,normalized);
+      if(state.current===surahNumber&&state.reciter===voice.id)activeWarshTiming=normalized;
+      return normalized;
+    }catch{return null}
+  }
+  async function playWarshVerse(index){
+    const descriptor=audioDescriptor(0);if(!playableSource(descriptor)){showToast(t("audioNeedsInternet"));return}
+    const timing=await loadWarshTiming();
+    if(!timing?.[index]){showToast(t("warshVerseUnavailable"));return}
+    audio.addEventListener("loadedmetadata",()=>{audio.currentTime=timing[index].start;warshStopAt=timing[index].end},{once:true});
+    audioQueue=[0];audioIndex=0;startAudio(0);
   }
   function startAudio(index){
     const descriptor=audioDescriptor(index),item=verses()[index];if(!descriptor||!item)return;const source=playableSource(descriptor);if(!source){showToast(t("audioNeedsInternet"));return;}
-    audio.src=source;audio.play().catch(()=>showToast(t("audioUnavailable")));
+    warshStopAt=0;audio.src=source;audio.play().catch(()=>showToast(t("audioUnavailable")));
     $("#mediaPlayer").hidden=false;$("#mediaTitle").textContent=state.riwayah==="warsh"?`${surahDisplayName(surah())} · Warsh`:`${surahDisplayName(surah())} · ${item.n}`;
     $$(".verse-card").forEach(node=>node.classList.remove("playing"));const card=$(`#verse-${item.n}`);card?.classList.add("playing");card?.scrollIntoView({behavior:"smooth",block:"center"});
   }
@@ -290,8 +397,9 @@
   function updateSettings(){
     $$('[data-language]').forEach(button=>button.classList.toggle("active",button.dataset.language===state.language));
     $$('[data-riwayah]').forEach(button=>button.classList.toggle("active",button.dataset.riwayah===state.riwayah));
-    const voices=state.riwayah==="warsh"?[["hicham-lharraz","Hicham El Harraz"]]:[["ar.alafasy","Mishary Alafasy"],["ar.husary","Mahmoud Al-Hussary"],["ar.abdurrahmaansudais","Abdurrahman As-Sudais"],["ar.mahermuaiqly","Maher Al-Muaiqly"]];$("#voiceSelect").innerHTML=voices.map(([id,name])=>`<option value="${id}"${id===state.reciter?" selected":""}>${name}</option>`).join("");
-    $("#tajweedToggle").checked=state.tajweed; $("#tajweedToggle").disabled=state.riwayah==="warsh";$("#pronunciationToggle").checked=state.pronunciation;$("#fontSize").value=String(state.fontSize);$("#memoryToggle").checked=state.memory;
+    const voices=state.riwayah==="warsh"?WARSH_VOICES.map(({id,name})=>[id,name]):[["ar.alafasy","Mishary Alafasy"],["ar.husary","Mahmoud Al-Hussary"],["ar.abdurrahmaansudais","Abdurrahman As-Sudais"],["ar.mahermuaiqly","Maher Al-Muaiqly"]];$("#voiceSelect").innerHTML=voices.map(([id,name])=>`<option value="${id}"${id===state.reciter?" selected":""}>${name}</option>`).join("");
+    const warshVoice=WARSH_VOICES.find(item=>item.id===state.reciter);$("#warshTimingNote").hidden=state.riwayah!=="warsh";$("#warshTimingNote").textContent=t(warshVoice?.timing?"warshTimed":"warshUntimed");
+    $("#tajweedToggle").checked=state.tajweed; $("#tajweedToggle").disabled=state.riwayah==="warsh";$("#pronunciationToggle").checked=state.pronunciation;$("#fontSize").value=String(state.fontSize);$("#memoryToggle").checked=state.memory;$("#wordStudyToggle").checked=state.wordStudy;$("#wordStudyToggle").disabled=state.riwayah==="warsh";
     $$('[data-translation]').forEach(button=>button.classList.toggle("active",button.dataset.translation===translationMode()));
     const audioSelect=$("#audioSurahSelect"),selected=Number(audioSelect.value)||state.current;audioSelect.innerHTML=DATA.map(item=>`<option value="${item.number}"${item.number===selected?" selected":""}>${String(item.number).padStart(3,"0")} · ${escapeHtml(surahDisplayName(item))}</option>`).join("");refreshAudioDownloadStatus();
   }
@@ -331,7 +439,7 @@
     $$(".onboarding-progress i").forEach((node,index)=>node.classList.toggle("active",index<=onboardingStep));
     const content=$("#onboardingContent");
     if(onboardingStep===0) content.innerHTML=`<small>NŪR</small><h1>${t("welcome")}</h1><p>${t("welcomeText")}</p><div class="onboarding-grid"><button data-onboard-language="fr">Français</button><button data-onboard-language="en">English</button><button data-onboard-language="ar">العربية</button></div>`;
-    else if(onboardingStep===1){const voices=state.riwayah==="warsh"?[['hicham-lharraz','Hicham El Harraz']]:[['ar.alafasy','Mishary Alafasy'],['ar.husary','Mahmoud Al-Hussary'],['ar.abdurrahmaansudais','Abdurrahman As-Sudais'],['ar.mahermuaiqly','Maher Al-Muaiqly']];content.innerHTML=`<small>02 · ${t("recitation")}</small><h1>${t("recitation")}</h1><p>${t("recitationText")}</p><div class="onboarding-setting"><label>${t("recitation")}</label><div class="onboarding-choice"><button data-onboard-riwayah="hafs"><b>Ḥafṣ</b><span>ʿan ʿĀṣim</span></button><button data-onboard-riwayah="warsh"><b>Warsh</b><span>ʿan Nāfiʿ</span></button></div></div><div class="onboarding-setting"><label for="onboardingVoice">${t("voice")}</label><select id="onboardingVoice">${voices.map(([id,name])=>`<option value="${id}"${id===state.reciter?' selected':''}>${name}</option>`).join('')}</select></div><label class="onboarding-switch"><span><b>${t("colors")}</b><small>${state.riwayah==="warsh"?'Warsh · —':'Ḥafṣ'}</small></span><input id="onboardingTajweed" type="checkbox" ${state.tajweed?'checked':''} ${state.riwayah==="warsh"?'disabled':''}></label>`}
+    else if(onboardingStep===1){const voices=state.riwayah==="warsh"?WARSH_VOICES.map(({id,name})=>[id,name]):[['ar.alafasy','Mishary Alafasy'],['ar.husary','Mahmoud Al-Hussary'],['ar.abdurrahmaansudais','Abdurrahman As-Sudais'],['ar.mahermuaiqly','Maher Al-Muaiqly']];content.innerHTML=`<small>02 · ${t("recitation")}</small><h1>${t("recitation")}</h1><p>${t("recitationText")}</p><div class="onboarding-setting"><label>${t("recitation")}</label><div class="onboarding-choice"><button data-onboard-riwayah="hafs"><b>Ḥafṣ</b><span>ʿan ʿĀṣim</span></button><button data-onboard-riwayah="warsh"><b>Warsh</b><span>ʿan Nāfiʿ</span></button></div></div><div class="onboarding-setting"><label for="onboardingVoice">${t("voice")}</label><select id="onboardingVoice">${voices.map(([id,name])=>`<option value="${id}"${id===state.reciter?' selected':''}>${name}</option>`).join('')}</select></div><label class="onboarding-switch"><span><b>${t("colors")}</b><small>${state.riwayah==="warsh"?'Warsh · —':'Ḥafṣ'}</small></span><input id="onboardingTajweed" type="checkbox" ${state.tajweed?'checked':''} ${state.riwayah==="warsh"?'disabled':''}></label>`}
     else if(onboardingStep===2)content.innerHTML=`<small>03 · ${t("display")}</small><h1>${t("readingDisplay")}</h1><p>${t("readingDisplayLead")}</p><label class="onboarding-switch"><span><b>${t("showPronunciation")}</b><small>${t("pronunciation")}</small></span><input id="onboardingPronunciation" type="checkbox" ${state.pronunciation?'checked':''}></label><div class="onboarding-setting"><label>${t("translationChoice")}</label><div class="onboarding-translation"><button data-onboard-translation="none">${t("noTranslation")}</button><button data-onboard-translation="fr">Français</button><button data-onboard-translation="en">English</button></div></div>`;
     else content.innerHTML=`<small>04 · NŪR</small><h1>${t("appearance")}</h1><p>${t("appearanceLead")}</p><div class="theme-cards"><button data-onboard-theme="dark"><span class="theme-preview dark-preview"><i></i></span><b>${t("dark")}</b></button><button data-onboard-theme="light"><span class="theme-preview light-preview"><i></i></span><b>${t("light")}</b></button></div>`;
     $$('[data-onboard-language]').forEach(button=>{button.classList.toggle("active",button.dataset.onboardLanguage===state.language);button.onclick=()=>{setLanguage(button.dataset.onboardLanguage,true);renderOnboarding();}});
@@ -353,19 +461,24 @@
     $$('[data-view]').forEach(button=>button.addEventListener("click",()=>button.dataset.view==="fqih"?openFqih():showView(button.dataset.view,{library:button.dataset.view==="read"?true:undefined})));
     bindThemeControls();$$('[data-settings]').forEach(button=>button.addEventListener("click",openSettings));$$('[data-fqih]').forEach(button=>button.addEventListener("click",()=>openFqih()));$("#explainSurah").onclick=()=>openFqih(0,true);
     $("#fqihComposer").onsubmit=event=>{event.preventDefault();sendFqih()};$("#fqihDraft").onkeydown=event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();sendFqih()}};$("#fqihPlus").onclick=()=>{$("#fqihPicker").hidden=!$("#fqihPicker").hidden;requestAnimationFrame(()=>$("#fqihComposer").scrollIntoView({behavior:"smooth",block:"center"}))};$("#fqihAttachButton").onclick=()=>{fqihPendingAttachment=buildFqihAttachment(Number($("#fqihSurahSelect").value)||1);$("#fqihPicker").hidden=true;renderFqih()};
-    $("#homeChoose").onclick=()=>showView("read",{library:true});$("#homeResume").onclick=()=>openSurah(state.current);$("#mobileLibrary").onclick=()=>{libraryOpen=true;$("#view-read").classList.add("library-open");scrollTo(0,0)};$("#surahSearch").oninput=event=>renderSurahList(event.target.value);
+    $("#homeChoose").onclick=()=>showView("read",{library:true});$("#homeResume").onclick=()=>openSurah(state.current);$("#mobileLibrary").onclick=()=>{libraryOpen=true;$("#view-read").classList.add("library-open");scrollTo(0,0)};$("#surahSearch").oninput=event=>renderSurahList(event.target.value);$("#verseSearch").oninput=event=>renderVerseSearch(event.target.value);
     $("#previousSurah").onclick=()=>openSurah(state.current-1);$("#nextSurah").onclick=()=>openSurah(state.current+1);$("#favoriteButton").onclick=toggleFavorite;$("#markRead").onclick=markRead;$("#jumpButton").onclick=goToVerse;$("#playSurah").onclick=playSurah;
     $("#mobilePreviousSurah").onclick=()=>openSurah(state.current-1);$("#mobileNextSurah").onclick=()=>openSurah(state.current+1);$("#mobileFavoriteButton").onclick=toggleFavorite;$("#mobileVerseSelect").onchange=event=>goToOfflineVerse(Number(event.target.value));$("#mobilePreviousVerse").onclick=()=>goToOfflineVerse(Math.max(1,state.currentVerse-1));$("#mobileNextVerse").onclick=()=>goToOfflineVerse(Math.min(verses().length,state.currentVerse+1));
     $("#closeSettings").onclick=closeSettings;$("#settingsLayer").onclick=event=>{if(event.target.id==="settingsLayer")closeSettings()};
     $$('[data-language]').forEach(button=>button.onclick=()=>setLanguage(button.dataset.language));$$('[data-riwayah]').forEach(button=>button.onclick=()=>{state.riwayah=button.dataset.riwayah;state.reciter=state.riwayah==="warsh"?"hicham-lharraz":"ar.alafasy";if(state.riwayah==="warsh")state.tajweed=false;saveState();renderSurah();updateSettings()});
-    $("#voiceSelect").onchange=event=>setOption("reciter",event.target.value);
-    $("#tajweedToggle").onchange=event=>setOption("tajweed",event.target.checked);$("#pronunciationToggle").onchange=event=>setOption("pronunciation",event.target.checked);$$('[data-translation]').forEach(button=>button.onclick=()=>setTranslation(button.dataset.translation));$("#fontSize").oninput=event=>setOption("fontSize",Number(event.target.value));$("#memoryToggle").onchange=event=>setOption("memory",event.target.checked);
+    $("#voiceSelect").onchange=event=>{activeWarshTiming=null;setOption("reciter",event.target.value)};
+    $("#tajweedToggle").onchange=event=>setOption("tajweed",event.target.checked);$("#pronunciationToggle").onchange=event=>setOption("pronunciation",event.target.checked);$$('[data-translation]').forEach(button=>button.onclick=()=>setTranslation(button.dataset.translation));$("#fontSize").oninput=event=>setOption("fontSize",Number(event.target.value));$("#memoryToggle").onchange=event=>setOption("memory",event.target.checked);$("#wordStudyToggle").onchange=event=>setOption("wordStudy",event.target.checked);
     $("#focusButton").onclick=()=>{closeSettings();showView("read",{library:false});document.body.classList.add("focus-mode")};$("#focusExit").onclick=()=>document.body.classList.remove("focus-mode");$("#imageButton").onclick=createSurahImage;$("#audioSurahSelect").onchange=refreshAudioDownloadStatus;$("#downloadAudio").onclick=downloadSelectedAudio;
     $("#resetData").onclick=()=>{if(confirm(t("resetConfirm"))){localStorage.removeItem(STORAGE_KEY);try{window.NurAndroid?.clearState?.();window.NurAndroid?.deleteAllAudio()}catch{}state={...DEFAULTS};saveState();closeSettings();applyLanguage();openOnboarding();showToast(t("resetDone"));}};
+    $("#exportBackup").onclick=exportBackup;$("#importBackupButton").onclick=()=>$("#importBackupFile").click();$("#importBackupFile").onchange=event=>{void importBackup(event.target.files?.[0]);event.target.value=""};
     $("#onboardingBack").onclick=()=>{onboardingStep=Math.max(0,onboardingStep-1);renderOnboarding()};$("#onboardingNext").onclick=()=>{if(onboardingStep<3){onboardingStep++;renderOnboarding()}else{state.onboarded=true;saveState();$("#onboarding").hidden=true;document.body.classList.remove("modal-open");showView("home")}};
     $("#resumeButton").onclick=()=>{hideResume();openSurah(state.current)};$("#dismissResume").onclick=hideResume;
     $("#mediaToggle").onclick=()=>audio.paused?audio.play():audio.pause();$("#mediaClose").onclick=()=>{audio.pause();$("#mediaPlayer").hidden=true};
-    audio.onplay=()=>{$("#mediaToggle").innerHTML=icon("pause");$("#mediaToggle").setAttribute("aria-label",t("pauseAudio"))};audio.onpause=()=>{$("#mediaToggle").innerHTML=icon("play");$("#mediaToggle").setAttribute("aria-label",t("resumeAudio"))};audio.ontimeupdate=()=>$("#mediaProgress").value=audio.duration?audio.currentTime/audio.duration*100:0;audio.onended=()=>{audioIndex++;if(audioIndex<audioQueue.length)startAudio(audioQueue[audioIndex]);else $("#mediaPlayer").hidden=true};audio.onerror=()=>showToast(t("audioUnavailable"));
+    audio.onplay=()=>{$("#mediaToggle").innerHTML=icon("pause");$("#mediaToggle").setAttribute("aria-label",t("pauseAudio"))};audio.onpause=()=>{$("#mediaToggle").innerHTML=icon("play");$("#mediaToggle").setAttribute("aria-label",t("resumeAudio"))};audio.ontimeupdate=()=>{
+      $("#mediaProgress").value=audio.duration?audio.currentTime/audio.duration*100:0;
+      if(warshStopAt&&audio.currentTime>=warshStopAt){warshStopAt=0;audio.pause();return}
+      if(state.riwayah==="warsh"&&activeWarshTiming){const index=activeWarshTiming.findIndex(row=>audio.currentTime>=row.start&&audio.currentTime<row.end);if(index>=0&&audioIndex!==index){audioIndex=index;const verse=verses()[index];$("#mediaTitle").textContent=`${surahDisplayName(surah())} · ${verse.n}`;$$('.verse-card.playing').forEach(card=>card.classList.remove('playing'));const card=$(`#verse-${verse.n}`);card?.classList.add('playing');card?.scrollIntoView({behavior:'smooth',block:'center'})}}
+    };audio.onended=()=>{audioIndex++;if(audioIndex<audioQueue.length)startAudio(audioQueue[audioIndex]);else $("#mediaPlayer").hidden=true};audio.onerror=()=>showToast(t("audioUnavailable"));
     document.addEventListener("click",event=>{const control=event.target.closest?.("button,a[href],select,input");if(!control||control.disabled)return;haptic(control.matches(".reset-data")?"warning":control.matches(".primary,.online-action,.mark-read,.download-audio-button")?"medium":"selection")},true);
     addEventListener("offline",()=>updateConnectivity(false,true));
     addEventListener("online",()=>{saveState();updateConnectivity(true,true)});
@@ -375,7 +488,7 @@
   function init(){
     if(DATA.length!==114){document.body.innerHTML=`<div class="empty-favorites">Offline Quran data is incomplete.</div>`;return;}
     saveState();document.documentElement.dataset.theme=state.theme;document.documentElement.dataset.network=connectionAvailable()?"online":"offline";bind();updateThemeIcons();applyLanguage();showView("home",{instant:true});setTimeout(()=>$("#splash").classList.add("hide"),650);setTimeout(()=>{if(!state.onboarded)openOnboarding();else showResume();if(!connectionAvailable())showToast(t("offlineNotice"))},1050);
-    window.NurOffline={createSurahImage,syncSharedState,updateConnectivity,onFqihResponse:handleFqihResponse,enterFocus:()=>document.body.classList.toggle("focus-mode"),meta:META,onAudioDownloadProgress:(surahNumber,done,total,finished,failed)=>{if(surahNumber!==selectedAudioSurah())return;const status=$("#audioDownloadStatus");status.textContent=failed?t("audioDownloadFailed"):finished?t("audioSaved"):`${t("audioDownloading")} · ${done}/${total}`;if(finished&&!failed)showToast(t("audioSaved"))}};
+    window.NurOffline={createSurahImage,syncSharedState,updateConnectivity,onFqihResponse:handleFqihResponse,onWarshTiming,onBackupSaved:success=>showToast(t(success?"backupSaved":"backupSaveFailed")),enterFocus:()=>document.body.classList.toggle("focus-mode"),meta:META,onAudioDownloadProgress:(surahNumber,done,total,finished,failed)=>{if(surahNumber!==selectedAudioSurah())return;const status=$("#audioDownloadStatus");status.textContent=failed?t("audioDownloadFailed"):finished?t("audioSaved"):`${t("audioDownloading")} · ${done}/${total}`;if(finished&&!failed)showToast(t("audioSaved"))}};
   }
   init();
 })();
