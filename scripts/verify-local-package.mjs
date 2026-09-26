@@ -47,6 +47,10 @@ if (!index.includes("ai-online-only") || !styles.includes('html[data-network="of
 if (!index.includes("fqih-shell") || !app.includes("sendFqih") || !styles.includes(".fqih-composer")) throw new Error("Fqih is not hosted inside the local application shell.");
 if (!index.includes('id="audioSurahSelect"')) throw new Error("The audio download settings do not include a surah picker.");
 if (!index.includes('data-translation="none"') || !app.includes("setTranslation")) throw new Error("The app does not enforce a single translation choice.");
+if (!index.includes('data-translation="both"') || !app.includes('mode==="both"')) throw new Error("Settings must allow both translations when explicitly selected.");
+if (index.indexOf('class="surah-actions"') > index.indexOf('id="basmala"')) throw new Error("The audio and explanation actions must precede the basmala.");
+if (!index.includes('class="theme-switch-glyph"') || !index.includes('class="media-glyph"') || !app.includes('icon("pause")')) throw new Error("Theme and audio controls must use vector icons rather than emoji glyphs.");
+if (!styles.includes('(min-width:901px) and (max-width:1280px)') || !styles.includes('.mobile-nav.is-hidden')) throw new Error("The animated mobile navigation layout is missing on tablets.");
 if (!app.includes('state.language==="ar"?item.nameArabic:item.nameLatin')) throw new Error("Arabic mode still risks displaying Latin surah names.");
 if (!styles.includes("env(safe-area-inset-top)")) throw new Error("The mobile reader does not respect the Android status bar safe area.");
 
