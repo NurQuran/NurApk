@@ -74,6 +74,9 @@
   Object.assign(copy.fr,{backupSaveFailed:"Impossible d’enregistrer la sauvegarde."});
   Object.assign(copy.en,{backupSaveFailed:"Could not save the backup."});
   Object.assign(copy.ar,{backupSaveFailed:"تعذر حفظ النسخة الاحتياطية."});
+  Object.assign(copy.fr,{wordStudySource:"Source et licence"});
+  Object.assign(copy.en,{wordStudySource:"Source and license"});
+  Object.assign(copy.ar,{wordStudySource:"المصدر والترخيص"});
 
   function loadState(){
     try { const local=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");const native=window.NurAndroid?.getState?.();const persisted={...local,...(native?JSON.parse(native):{})};const merged={...DEFAULTS,...persisted};if(!Object.prototype.hasOwnProperty.call(persisted,"translationAuto"))merged.translationAuto=Object.keys(persisted).length===0;return merged; }
@@ -168,7 +171,7 @@
     const joined=normalize(words.map(word=>word?.[0]||"").join(" ")).replace(/ /g,"");
     const text=normalize(verse.arabic).replace(/ /g,"");
     if(joined!==text)return "";
-    return `<details class="word-study"><summary>${t("wordStudy")}</summary><div>${words.map(word=>`<div class="word-chip"><strong lang="ar" dir="rtl">${escapeHtml(word[0])}</strong><span>${escapeHtml(word[1])}</span><small>${escapeHtml(word[2])}</small></div>`).join("")}</div><p>${t("wordStudyEnglish")}</p></details>`;
+    return `<details class="word-study"><summary>${t("wordStudy")}</summary><div>${words.map(word=>`<div class="word-chip"><strong lang="ar" dir="rtl">${escapeHtml(word[0])}</strong><span>${escapeHtml(word[1])}</span><small>${escapeHtml(word[2])}</small></div>`).join("")}</div><p>${t("wordStudyEnglish")} · <a href="https://github.com/mamun-al-abdullah/quran" rel="noopener noreferrer">${t("wordStudySource")}</a></p></details>`;
   }
 
   function openSurah(number){
@@ -264,7 +267,7 @@
       if(parsed?.format!=="nur-backup"||parsed.version!==1||!parsed.state||typeof parsed.state!=="object")throw new Error("format");
       const value=parsed.state,validNumbers=list=>Array.isArray(list)&&list.length<=114&&list.every(n=>Number.isInteger(n)&&n>=1&&n<=114);
       if(!validNumbers(value.favorites)||!validNumbers(value.read)||!Number.isInteger(value.current)||value.current<1||value.current>114||!Number.isInteger(value.currentVerse)||value.currentVerse<1||value.currentVerse>286||!["fr","en","ar"].includes(value.language)||!["hafs","warsh"].includes(value.riwayah)||!["dark","light"].includes(value.theme))throw new Error("values");
-      state={...state,...Object.fromEntries(Object.entries(value).filter(([key])=>Object.hasOwn(DEFAULTS,key))),favorites:[...new Set(value.favorites)].sort((a,b)=>a-b),read:[...new Set(value.read)].sort((a,b)=>a-b),onboarded:true};
+      state={...state,...Object.fromEntries(Object.entries(value).filter(([key])=>Object.hasOwn(DEFAULTS,key))),translationAuto:typeof value.translationAuto==="boolean"?value.translationAuto:false,fontSize:Math.max(28,Math.min(60,Number(value.fontSize)||40)),minutes:Math.max(0,Number(value.minutes)||0),goal:Math.max(1,Number(value.goal)||10),favorites:[...new Set(value.favorites)].sort((a,b)=>a-b),read:[...new Set(value.read)].sort((a,b)=>a-b),onboarded:true};
       saveState();applyTheme(state.theme);applyLanguage();closeSettings();showView("favorites",{instant:true});showToast(t("backupImported"));
     }catch{showToast(t("backupInvalid"))}
   }
